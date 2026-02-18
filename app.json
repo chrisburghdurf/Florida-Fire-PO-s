@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Fire Academy PO's",
+    "slug": "fire-academy-pos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
