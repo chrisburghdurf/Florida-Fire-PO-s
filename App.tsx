@@ -156,7 +156,7 @@ export default function App() {
             )}
           </View>
 
-          <ImageBackground source={require("./assets/hero.jpg")} style={styles.hero} imageStyle={styles.heroImage}>
+          <ImageBackground source={require("./assets/hero.png")} style={styles.hero} imageStyle={styles.heroImage}>
             <View style={styles.heroOverlay} />
             <View style={styles.heroContent}>
               <Text style={styles.heroKicker}>WELCOME TO</Text>
