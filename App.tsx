@@ -1,5 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import {
+  Linking,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -20,11 +22,34 @@ type ObjectiveSection = {
   data: PerformanceObjective[];
 };
 
+type ReaderSelection = {
+  title: string;
+  sectionTitle: string;
+  pageLabel: string;
+  startPage: number;
+};
+
+const PDF_PATH = "/fire-academy-pos.pdf";
+
+function extractStartPage(pageValue: string): number {
+  const match = pageValue.match(/\d+/);
+  if (!match) {
+    return 1;
+  }
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function buildPdfUrl(startPage: number): string {
+  return `${PDF_PATH}#page=${startPage}&zoom=page-width`;
+}
+
 export default function App() {
   const sectionListRef = useRef<SectionList<PerformanceObjective>>(null);
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
 
   const sections = useMemo<ObjectiveSection[]>(() => {
     const normalized = query.trim().toLowerCase();
@@ -79,6 +104,64 @@ export default function App() {
     });
   };
 
+  const openObjective = (objective: PerformanceObjective, sectionTitle: string) => {
+    setSelectedId(objective.id);
+    setReaderSelection({
+      title: objective.title,
+      sectionTitle,
+      pageLabel: objective.page,
+      startPage: extractStartPage(objective.page),
+    });
+  };
+
+  if (readerSelection) {
+    const pdfUrl = buildPdfUrl(readerSelection.startPage);
+
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+        <View style={styles.container}>
+          <View style={styles.readerHeader}>
+            <Text style={styles.readerKicker}>PO Viewer</Text>
+            <Text style={styles.readerTitle}>{readerSelection.title}</Text>
+            <Text style={styles.readerSubtitle}>
+              {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
+            </Text>
+          </View>
+
+          <View style={styles.readerFrameWrap}>
+            {Platform.OS === "web" ? (
+              React.createElement("iframe", {
+                src: pdfUrl,
+                title: "Fire Academy Performance Objectives PDF",
+                style: {
+                  border: "0",
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "12px",
+                  backgroundColor: "#0f1720",
+                },
+              })
+            ) : (
+              <View style={styles.nativeFallback}>
+                <Text style={styles.nativeFallbackText}>Open the selected page in your device browser.</Text>
+                <Pressable style={styles.openButton} onPress={() => Linking.openURL(pdfUrl)}>
+                  <Text style={styles.openButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.bottomBar}>
+            <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
+              <Text style={styles.backButtonText}>Back to Table of Contents</Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -86,7 +169,7 @@ export default function App() {
         <View style={styles.header}>
           <Text style={styles.kicker}>Florida Firefighter I & II</Text>
           <Text style={styles.title}>Performance Objectives Navigator</Text>
-          <Text style={styles.subtitle}>2025-2026 quick access by section and PO page</Text>
+          <Text style={styles.subtitle}>Tap any page badge to jump into the PO PDF.</Text>
         </View>
 
         <TextInput
@@ -135,13 +218,15 @@ export default function App() {
           renderItem={({ item, section }) => {
             const selected = item.id === selectedId;
             return (
-              <Pressable style={[styles.card, selected && styles.cardSelected]} onPress={() => setSelectedId(selected ? null : item.id)}>
+              <View style={[styles.card, selected && styles.cardSelected]}>
                 <View style={styles.cardTopRow}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.pagePill}>p. {item.page}</Text>
+                  <Pressable style={styles.pagePill} onPress={() => openObjective(item, section.title)}>
+                    <Text style={styles.pagePillText}>p. {item.page}</Text>
+                  </Pressable>
                 </View>
-                {selected && <Text style={styles.cardMeta}>Section: {section.title}</Text>}
-              </Pressable>
+                <Text style={styles.cardMeta}>Section: {section.title}</Text>
+              </View>
             );
           }}
           ListEmptyComponent={<Text style={styles.empty}>No objectives match this filter.</Text>}
@@ -266,14 +351,15 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   pagePill: {
-    color: "#dbefff",
-    fontSize: 12,
-    fontWeight: "800",
     backgroundColor: "#295d8d",
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    overflow: "hidden",
+  },
+  pagePillText: {
+    color: "#dbefff",
+    fontSize: 12,
+    fontWeight: "800",
   },
   cardMeta: {
     color: "#b5cadd",
@@ -285,5 +371,72 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 28,
     fontSize: 15,
+  },
+  readerHeader: {
+    marginBottom: 10,
+    gap: 4,
+  },
+  readerKicker: {
+    color: "#8fc5ff",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  readerTitle: {
+    color: "#f8fbff",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  readerSubtitle: {
+    color: "#bfd0df",
+    fontSize: 13,
+  },
+  readerFrameWrap: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderColor: "#263948",
+    borderWidth: 1,
+    backgroundColor: "#0b1118",
+  },
+  nativeFallback: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    padding: 18,
+  },
+  nativeFallbackText: {
+    color: "#d7e6f4",
+    textAlign: "center",
+    fontSize: 14,
+  },
+  openButton: {
+    backgroundColor: "#2e7ed1",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  openButtonText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  bottomBar: {
+    paddingVertical: 12,
+  },
+  backButton: {
+    backgroundColor: "#1f3d59",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderColor: "#3b658a",
+    borderWidth: 1,
+  },
+  backButtonText: {
+    color: "#f8fbff",
+    fontWeight: "800",
+    fontSize: 14,
   },
 });
