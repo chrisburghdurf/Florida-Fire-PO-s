@@ -95,7 +95,7 @@ export default function App() {
         <View style={styles.readerContainer}>
           <View style={styles.readerHeader}>
             <View style={styles.readerLogoRow}>
-              <Image source={require("./assets/logo.png")} style={styles.readerLogo} />
+              <Image source={require("./assets/logo.jpg")} style={styles.readerLogo} />
               <Text style={styles.readerBrand}>MTC FIRE ACADEMY</Text>
             </View>
             <Text style={styles.readerTitle}>{readerSelection.title}</Text>
@@ -136,7 +136,7 @@ export default function App() {
         <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
           <View style={styles.navbar}>
             <View style={styles.brandRow}>
-              <Image source={require("./assets/logo.png")} style={styles.logo} />
+              <Image source={require("./assets/logo.jpg")} style={styles.logo} />
               <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
             </View>
 
