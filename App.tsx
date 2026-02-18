@@ -1,15 +1,17 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
+  Image,
+  ImageBackground,
   Linking,
   Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
-  SectionList,
   StyleSheet,
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { PERFORMANCE_SECTIONS, type PerformanceObjective } from "./src/data/performanceObjectives";
@@ -33,9 +35,7 @@ const PDF_PATH = "/fire-academy-pos.pdf";
 
 function extractStartPage(pageValue: string): number {
   const match = pageValue.match(/\d+/);
-  if (!match) {
-    return 1;
-  }
+  if (!match) return 1;
   const parsed = Number.parseInt(match[0], 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
@@ -45,22 +45,20 @@ function buildPdfUrl(startPage: number): string {
 }
 
 export default function App() {
-  const sectionListRef = useRef<SectionList<PerformanceObjective>>(null);
+  const { width } = useWindowDimensions();
+  const isMobile = width < 860;
+  const isDesktop = width >= 1200;
+
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
 
   const sections = useMemo<ObjectiveSection[]>(() => {
     const normalized = query.trim().toLowerCase();
 
     return PERFORMANCE_SECTIONS.filter((section) => {
-      if (sectionFilter !== "all" && section.id !== sectionFilter) {
-        return false;
-      }
-      if (!normalized) {
-        return true;
-      }
+      if (sectionFilter !== "all" && section.id !== sectionFilter) return false;
+      if (!normalized) return true;
       return (
         section.title.toLowerCase().includes(normalized) ||
         section.objectives.some((objective) => objective.title.toLowerCase().includes(normalized) || objective.page.includes(normalized))
@@ -70,9 +68,7 @@ export default function App() {
         id: section.id,
         title: section.title,
         data: section.objectives.filter((objective) => {
-          if (!normalized) {
-            return true;
-          }
+          if (!normalized) return true;
           return objective.title.toLowerCase().includes(normalized) || objective.page.includes(normalized);
         }),
       }))
@@ -81,31 +77,7 @@ export default function App() {
 
   const totalObjectives = useMemo(() => sections.reduce((sum, section) => sum + section.data.length, 0), [sections]);
 
-  const jumpToSection = (sectionId: string) => {
-    setSectionFilter(sectionId);
-    setSelectedId(null);
-
-    if (query.trim().length > 0) {
-      return;
-    }
-
-    const index = PERFORMANCE_SECTIONS.findIndex((section) => section.id === sectionId);
-    if (index < 0) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      sectionListRef.current?.scrollToLocation({
-        sectionIndex: index,
-        itemIndex: 0,
-        animated: true,
-        viewPosition: 0,
-      });
-    });
-  };
-
   const openObjective = (objective: PerformanceObjective, sectionTitle: string) => {
-    setSelectedId(objective.id);
     setReaderSelection({
       title: objective.title,
       sectionTitle,
@@ -120,9 +92,12 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <View style={styles.container}>
+        <View style={styles.readerContainer}>
           <View style={styles.readerHeader}>
-            <Text style={styles.readerKicker}>PO Viewer</Text>
+            <View style={styles.readerLogoRow}>
+              <Image source={require("./assets/logo.png")} style={styles.readerLogo} />
+              <Text style={styles.readerBrand}>MTC FIRE ACADEMY</Text>
+            </View>
             <Text style={styles.readerTitle}>{readerSelection.title}</Text>
             <Text style={styles.readerSubtitle}>
               {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
@@ -134,29 +109,21 @@ export default function App() {
               React.createElement("iframe", {
                 src: pdfUrl,
                 title: "Fire Academy Performance Objectives PDF",
-                style: {
-                  border: "0",
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "12px",
-                  backgroundColor: "#0f1720",
-                },
+                style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
               })
             ) : (
               <View style={styles.nativeFallback}>
-                <Text style={styles.nativeFallbackText}>Open the selected page in your device browser.</Text>
-                <Pressable style={styles.openButton} onPress={() => Linking.openURL(pdfUrl)}>
-                  <Text style={styles.openButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
+                <Text style={styles.nativeFallbackText}>Tap below to open the PO PDF at the selected page.</Text>
+                <Pressable style={styles.viewerOpenButton} onPress={() => Linking.openURL(pdfUrl)}>
+                  <Text style={styles.viewerOpenButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
                 </Pressable>
               </View>
             )}
           </View>
 
-          <View style={styles.bottomBar}>
-            <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
-              <Text style={styles.backButtonText}>Back to Table of Contents</Text>
-            </Pressable>
-          </View>
+          <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
+            <Text style={styles.backButtonText}>Back to Table of Contents</Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
@@ -165,278 +132,311 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.kicker}>Florida Firefighter I & II</Text>
-          <Text style={styles.title}>Performance Objectives Navigator</Text>
-          <Text style={styles.subtitle}>Tap any page badge to jump into the PO PDF.</Text>
-        </View>
+      <View style={styles.appShell}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
+          <View style={styles.navbar}>
+            <View style={styles.brandRow}>
+              <Image source={require("./assets/logo.png")} style={styles.logo} />
+              <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
+            </View>
 
-        <TextInput
-          style={styles.search}
-          placeholder="Search objective, keyword, or page"
-          placeholderTextColor="#8ca2b4"
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-        />
+            {isMobile ? (
+              <Text style={styles.menuIcon}>☰</Text>
+            ) : (
+              <View style={styles.navLinksRow}>
+                <Text style={styles.navLink}>Home</Text>
+                <Text style={styles.navLink}>POs</Text>
+                <Text style={styles.navLink}>Study Tools</Text>
+                <Text style={styles.navLink}>Resources</Text>
+                <Text style={styles.navLink}>Contact</Text>
+                <Pressable style={styles.loginButton}>
+                  <Text style={styles.loginButtonText}>Student Login</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-          <Pressable
-            style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
-            onPress={() => {
-              setSectionFilter("all");
-              setSelectedId(null);
-            }}
-          >
-            <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All Sections</Text>
-          </Pressable>
+          <ImageBackground source={require("./assets/hero.jpg")} style={styles.hero} imageStyle={styles.heroImage}>
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <Text style={styles.heroKicker}>WELCOME TO</Text>
+              <Text style={styles.heroTitle}>MTC FIRE ACADEMY</Text>
+              <Text style={styles.heroSubtitle}>
+                Prepare for your Florida State Fire Exam and navigate your Performance Objectives quickly.
+              </Text>
+              <Pressable style={styles.getStartedButton} onPress={() => setSectionFilter("all")}>
+                <Text style={styles.getStartedText}>Get Started</Text>
+              </Pressable>
+            </View>
+          </ImageBackground>
 
-          {PERFORMANCE_SECTIONS.map((section) => (
-            <Pressable
-              key={section.id}
-              style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
-              onPress={() => jumpToSection(section.id)}
-            >
-              <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
+          <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
+            <Pressable style={[styles.quickCard, styles.quickCardYellow]}>
+              <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
             </Pressable>
-          ))}
+            <Pressable style={[styles.quickCard, styles.quickCardRed]}>
+              <Text style={styles.quickCardTitle}>Study Tools</Text>
+            </Pressable>
+            <Pressable style={[styles.quickCard, styles.quickCardBlue]}>
+              <Text style={styles.quickCardTitle}>Student Resources</Text>
+            </Pressable>
+          </View>
+
+          <View style={[styles.mainArea, isDesktop && styles.mainAreaDesktop]}>
+            <View style={styles.mainColumn}>
+              <Text style={styles.mainHeading}>Florida Fire Performance Objectives (POs)</Text>
+
+              <TextInput
+                style={styles.search}
+                placeholder="Search objectives or page"
+                placeholderTextColor="#8797ad"
+                value={query}
+                onChangeText={setQuery}
+              />
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+                <Pressable
+                  style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
+                  onPress={() => setSectionFilter("all")}
+                >
+                  <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All</Text>
+                </Pressable>
+                {PERFORMANCE_SECTIONS.map((section) => (
+                  <Pressable
+                    key={section.id}
+                    style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
+                    onPress={() => setSectionFilter(section.id)}
+                  >
+                    <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.resultMeta}>
+                {sections.length} sections • {totalObjectives} objectives
+              </Text>
+
+              {sections.map((section) => (
+                <View key={section.id} style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.data.map((objective) => (
+                    <View key={objective.id} style={styles.objectiveRow}>
+                      <Text style={styles.objectiveText}>{objective.title}</Text>
+                      <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
+                        <Text style={styles.pageLinkText}>p. {objective.page}</Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+
+            {isDesktop ? (
+              <View style={styles.sidebar}>
+                <Text style={styles.sidebarTitle}>Recent Updates & Announcements</Text>
+                <Text style={styles.sidebarItem}>New Practice Exam Packet</Text>
+                <Text style={styles.sidebarDate}>April 15, 2024</Text>
+                <Pressable style={styles.sidebarButton}>
+                  <Text style={styles.sidebarButtonText}>View POs</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
         </ScrollView>
 
-        <View style={styles.resultsRow}>
-          <Text style={styles.resultsText}>{sections.length} sections</Text>
-          <Text style={styles.resultsText}>{totalObjectives} objectives</Text>
-        </View>
-
-        <SectionList
-          ref={sectionListRef}
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          stickySectionHeadersEnabled
-          contentContainerStyle={styles.listContent}
-          renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
-          renderItem={({ item, section }) => {
-            const selected = item.id === selectedId;
-            return (
-              <View style={[styles.card, selected && styles.cardSelected]}>
-                <View style={styles.cardTopRow}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Pressable style={styles.pagePill} onPress={() => openObjective(item, section.title)}>
-                    <Text style={styles.pagePillText}>p. {item.page}</Text>
-                  </Pressable>
-                </View>
-                <Text style={styles.cardMeta}>Section: {section.title}</Text>
-              </View>
-            );
-          }}
-          ListEmptyComponent={<Text style={styles.empty}>No objectives match this filter.</Text>}
-        />
+        {isMobile ? (
+          <View style={styles.mobileTabBar}>
+            <Text style={styles.mobileTab}>Home</Text>
+            <Text style={styles.mobileTab}>Materials</Text>
+            <Text style={styles.mobileTab}>Contact</Text>
+          </View>
+        ) : null}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0f1720",
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    backgroundColor: "#0f1720",
-  },
-  header: {
-    gap: 4,
-    marginBottom: 12,
-  },
-  kicker: {
-    color: "#8fc5ff",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  title: {
-    color: "#f8fbff",
-    fontSize: 24,
-    fontWeight: "800",
-    lineHeight: 28,
-  },
-  subtitle: {
-    color: "#bfd0df",
-    fontSize: 13,
-  },
-  search: {
-    backgroundColor: "#1a2733",
-    color: "#f8fbff",
-    borderColor: "#2a3c4d",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    marginBottom: 10,
-  },
-  chipsRow: {
-    gap: 8,
-    paddingBottom: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: "#324a5f",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#12202b",
-  },
-  chipActive: {
-    backgroundColor: "#2e7ed1",
-    borderColor: "#2e7ed1",
-  },
-  chipText: {
-    color: "#c8d9e8",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  chipTextActive: {
-    color: "#ffffff",
-  },
-  resultsRow: {
+  safeArea: { flex: 1, backgroundColor: "#d8d8db" },
+  appShell: { flex: 1 },
+  scrollContent: { paddingBottom: 26 },
+  scrollContentMobile: { paddingBottom: 84 },
+  navbar: {
+    backgroundColor: "#111f47",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 4,
-    marginBottom: 8,
+    alignItems: "center",
   },
-  resultsText: {
-    color: "#a7bdcf",
-    fontSize: 12,
-    fontWeight: "600",
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logo: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#0f1720" },
+  brand: { color: "#f6f8ff", fontSize: 17, fontWeight: "800" },
+  navLinksRow: { flexDirection: "row", alignItems: "center", gap: 16 },
+  navLink: { color: "#f0f5ff", fontSize: 15, fontWeight: "600" },
+  loginButton: {
+    backgroundColor: "#d3363b",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
-  listContent: {
-    paddingBottom: 24,
+  loginButtonText: { color: "#fff", fontWeight: "800", fontSize: 14 },
+  menuIcon: { color: "#fff", fontSize: 26, fontWeight: "700" },
+  hero: { minHeight: 290, justifyContent: "center" },
+  heroImage: { resizeMode: "cover" },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 18, 36, 0.55)",
   },
-  sectionHeader: {
-    color: "#e9f2fb",
-    fontSize: 17,
-    fontWeight: "800",
-    backgroundColor: "#0f1720",
-    paddingTop: 12,
-    paddingBottom: 8,
+  heroContent: { paddingHorizontal: 24, paddingVertical: 26, maxWidth: 620, gap: 8 },
+  heroKicker: { color: "#eaf1ff", fontSize: 20, fontWeight: "700" },
+  heroTitle: { color: "#ffffff", fontSize: 48, lineHeight: 52, fontWeight: "900" },
+  heroSubtitle: { color: "#e9eef9", fontSize: 23, lineHeight: 34, fontWeight: "500", maxWidth: 600 },
+  getStartedButton: {
+    backgroundColor: "#f4cc34",
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    paddingHorizontal: 26,
+    paddingVertical: 12,
+    marginTop: 8,
   },
-  card: {
-    backgroundColor: "#162431",
-    borderRadius: 12,
+  getStartedText: { color: "#1a1a12", fontSize: 30, fontWeight: "800" },
+  quickActions: {
+    flexDirection: "row",
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#eceef2",
+  },
+  quickActionsMobile: { flexDirection: "column" },
+  quickCard: {
+    flex: 1,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: "#263948",
+    borderColor: "rgba(0,0,0,0.1)",
+  },
+  quickCardYellow: { backgroundColor: "#f3ca34" },
+  quickCardRed: { backgroundColor: "#cb3540" },
+  quickCardBlue: { backgroundColor: "#253f66" },
+  quickCardTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
+  mainArea: { paddingHorizontal: 16, paddingTop: 10, gap: 12 },
+  mainAreaDesktop: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  mainColumn: { flex: 1 },
+  mainHeading: { fontSize: 30, fontWeight: "800", color: "#1c2430", marginBottom: 6 },
+  search: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#d3d9e5",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    marginBottom: 8,
+    fontSize: 16,
   },
-  cardSelected: {
-    borderColor: "#5ea8ff",
-    backgroundColor: "#1c3041",
-  },
-  cardTopRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "flex-start",
-  },
-  cardTitle: {
-    flex: 1,
-    color: "#f1f7ff",
-    fontSize: 15,
-    fontWeight: "600",
-    lineHeight: 20,
-  },
-  pagePill: {
-    backgroundColor: "#295d8d",
+  chipsRow: { gap: 8, paddingVertical: 12 },
+  chip: {
+    borderWidth: 1,
+    borderColor: "#ccd7ea",
     borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    backgroundColor: "#f7f9fd",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  pagePillText: {
-    color: "#dbefff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  cardMeta: {
-    color: "#b5cadd",
-    marginTop: 8,
-    fontSize: 12,
-  },
-  empty: {
-    color: "#b8cad9",
-    textAlign: "center",
-    marginTop: 28,
-    fontSize: 15,
-  },
-  readerHeader: {
+  chipActive: { borderColor: "#1d3f78", backgroundColor: "#1d3f78" },
+  chipText: { color: "#294264", fontSize: 13, fontWeight: "700" },
+  chipTextActive: { color: "#fff" },
+  resultMeta: { color: "#34475f", fontWeight: "600", marginBottom: 8 },
+  sectionCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#dde3ef",
+    padding: 12,
     marginBottom: 10,
-    gap: 4,
+    shadowColor: "#243247",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
-  readerKicker: {
-    color: "#8fc5ff",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  sectionTitle: { color: "#1f2e44", fontSize: 19, fontWeight: "800", marginBottom: 8 },
+  objectiveRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#eef2f8",
+    paddingVertical: 8,
   },
-  readerTitle: {
-    color: "#f8fbff",
-    fontSize: 18,
-    fontWeight: "800",
+  objectiveText: { flex: 1, color: "#31465e", fontSize: 14, fontWeight: "500" },
+  pageLink: {
+    backgroundColor: "#f4cc34",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  readerSubtitle: {
-    color: "#bfd0df",
-    fontSize: 13,
+  pageLinkText: { color: "#1c1e22", fontWeight: "800", fontSize: 12 },
+  sidebar: {
+    width: 280,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#dde3ef",
+    padding: 14,
+    gap: 10,
   },
+  sidebarTitle: { color: "#1f2e44", fontSize: 20, fontWeight: "800" },
+  sidebarItem: { color: "#253852", fontSize: 16, fontWeight: "600" },
+  sidebarDate: { color: "#6f8098", fontSize: 14 },
+  sidebarButton: {
+    marginTop: 8,
+    backgroundColor: "#f4cc34",
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  sidebarButtonText: { color: "#1c1e22", fontWeight: "900" },
+  mobileTabBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#111f47",
+    borderTopWidth: 1,
+    borderTopColor: "#294064",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 12,
+  },
+  mobileTab: { color: "#eff4ff", fontSize: 13, fontWeight: "700" },
+  readerContainer: { flex: 1, padding: 12, backgroundColor: "#09121c" },
+  readerHeader: { marginBottom: 10, gap: 4 },
+  readerLogoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  readerLogo: { width: 38, height: 38, borderRadius: 19 },
+  readerBrand: { color: "#f2f6ff", fontWeight: "800", fontSize: 16 },
+  readerTitle: { color: "#fff", fontWeight: "800", fontSize: 18 },
+  readerSubtitle: { color: "#b7c6db", fontSize: 13 },
   readerFrameWrap: {
     flex: 1,
     borderRadius: 12,
     overflow: "hidden",
-    borderColor: "#263948",
     borderWidth: 1,
-    backgroundColor: "#0b1118",
+    borderColor: "#2b3f57",
+    backgroundColor: "#0a1119",
   },
-  nativeFallback: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    padding: 18,
-  },
-  nativeFallbackText: {
-    color: "#d7e6f4",
-    textAlign: "center",
-    fontSize: 14,
-  },
-  openButton: {
-    backgroundColor: "#2e7ed1",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  openButtonText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  bottomBar: {
-    paddingVertical: 12,
-  },
+  nativeFallback: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 20 },
+  nativeFallbackText: { color: "#e7eef8", textAlign: "center", fontSize: 15 },
+  viewerOpenButton: { backgroundColor: "#f4cc34", borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 },
+  viewerOpenButtonText: { color: "#1a1e26", fontWeight: "800" },
   backButton: {
-    backgroundColor: "#1f3d59",
+    marginTop: 10,
+    backgroundColor: "#1d3f78",
+    borderWidth: 1,
+    borderColor: "#3f639f",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
-    borderColor: "#3b658a",
-    borderWidth: 1,
   },
-  backButtonText: {
-    color: "#f8fbff",
-    fontWeight: "800",
-    fontSize: 14,
-  },
+  backButtonText: { color: "#fff", fontWeight: "800", fontSize: 15 },
 });
