@@ -82,6 +82,10 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
+  const goHome = () => {
+    setCurrentPage("home");
+    setReaderSelection(null);
+  };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
     const normalized = query.trim().toLowerCase();
@@ -116,18 +120,43 @@ export default function App() {
     });
   };
 
+  const renderTopBanner = () => (
+    <View style={styles.navbar}>
+      <Pressable style={styles.brandRow} onPress={goHome}>
+        <Image source={require("./assets/logo.jpg")} style={styles.logo} />
+        <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
+      </Pressable>
+
+      {isMobile ? (
+        <Text style={styles.menuIcon}>☰</Text>
+      ) : (
+        <View style={styles.navLinksRow}>
+          <Pressable onPress={goHome}>
+            <Text style={styles.navLink}>Home</Text>
+          </Pressable>
+          <Text style={styles.navLink}>POs</Text>
+          <Pressable onPress={() => setCurrentPage("resources")}>
+            <Text style={styles.navLink}>Student Resources</Text>
+          </Pressable>
+          <Text style={styles.navLink}>Contact</Text>
+          <Pressable style={styles.loginButton}>
+            <Text style={styles.loginButtonText}>Student Login</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
   if (readerSelection) {
     const pdfUrl = buildPdfUrl(readerSelection.startPage);
 
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <View style={styles.readerContainer}>
-          <View style={styles.readerHeader}>
-            <View style={styles.readerLogoRow}>
-              <Image source={require("./assets/logo.jpg")} style={styles.readerLogo} />
-              <Text style={styles.readerBrand}>MTC FIRE ACADEMY</Text>
-            </View>
+        <View style={styles.appShell}>
+          {renderTopBanner()}
+          <View style={styles.readerContainer}>
+            <View style={styles.readerInfo}>
             <Text style={styles.readerTitle}>{readerSelection.title}</Text>
             <Text style={styles.readerSubtitle}>
               {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
@@ -154,6 +183,7 @@ export default function App() {
           <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
             <Text style={styles.backButtonText}>Back to Table of Contents</Text>
           </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -164,15 +194,7 @@ export default function App() {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
         <View style={styles.appShell}>
-          <View style={styles.navbar}>
-            <View style={styles.brandRow}>
-              <Image source={require("./assets/logo.jpg")} style={styles.logo} />
-              <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
-            </View>
-            <Pressable style={styles.loginButton} onPress={() => setCurrentPage("home")}>
-              <Text style={styles.loginButtonText}>Back Home</Text>
-            </Pressable>
-          </View>
+          {renderTopBanner()}
 
           <ScrollView contentContainerStyle={styles.resourcesContent}>
             <Text style={styles.resourcesTitle}>Student Resources</Text>
@@ -200,30 +222,7 @@ export default function App() {
       <StatusBar style="light" />
       <View style={styles.appShell}>
         <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
-          <View style={styles.navbar}>
-            <View style={styles.brandRow}>
-              <Image source={require("./assets/logo.jpg")} style={styles.logo} />
-              <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
-            </View>
-
-            {isMobile ? (
-              <Text style={styles.menuIcon}>☰</Text>
-            ) : (
-              <View style={styles.navLinksRow}>
-                <Pressable onPress={() => setCurrentPage("home")}>
-                  <Text style={styles.navLink}>Home</Text>
-                </Pressable>
-                <Text style={styles.navLink}>POs</Text>
-                <Pressable onPress={() => setCurrentPage("resources")}>
-                  <Text style={styles.navLink}>Student Resources</Text>
-                </Pressable>
-                <Text style={styles.navLink}>Contact</Text>
-                <Pressable style={styles.loginButton}>
-                  <Text style={styles.loginButtonText}>Student Login</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
+          {renderTopBanner()}
 
           <ImageBackground source={require("./assets/hero.png")} style={styles.hero} imageStyle={styles.heroImage}>
             <View style={styles.heroOverlay} />
@@ -498,6 +497,7 @@ const styles = StyleSheet.create({
   resourceNote: { color: "#586b86", fontSize: 14 },
   resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
   readerContainer: { flex: 1, padding: 12, backgroundColor: "#09121c" },
+  readerInfo: { marginBottom: 10, gap: 4 },
   readerHeader: { marginBottom: 10, gap: 4 },
   readerLogoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   readerLogo: { width: 38, height: 38, borderRadius: 19 },
