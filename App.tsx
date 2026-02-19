@@ -165,7 +165,7 @@ export default function App() {
                 Prepare for your Florida State Fire Exam and navigate your Performance Objectives quickly.
               </Text>
               <Pressable style={styles.getStartedButton} onPress={() => setSectionFilter("all")}>
-                <Text style={styles.getStartedText}>Get Started</Text>
+                <Text style={styles.getStartedText}>Performance Objectives (POs)</Text>
               </Pressable>
             </View>
           </ImageBackground>
