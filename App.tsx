@@ -32,6 +32,35 @@ type ReaderSelection = {
 };
 
 const PDF_PATH = "/fire-academy-pos.pdf";
+type AppPage = "home" | "resources";
+
+type ResourceLink = {
+  id: string;
+  label: string;
+  url: string;
+  note: string;
+};
+
+const RESOURCE_LINKS: ResourceLink[] = [
+  {
+    id: "resource-1",
+    label: "Florida Fire College",
+    url: "https://www.myfloridacfo.com/division/sfm/bfst",
+    note: "State training and certification resources",
+  },
+  {
+    id: "resource-2",
+    label: "Practice Exam Portal",
+    url: "https://example.com/practice-exams",
+    note: "Replace with your official exam prep link",
+  },
+  {
+    id: "resource-3",
+    label: "Student Forms & Downloads",
+    url: "https://example.com/student-forms",
+    note: "Replace with your document/forms link",
+  },
+];
 
 function extractStartPage(pageValue: string): number {
   const match = pageValue.match(/\d+/);
@@ -49,6 +78,7 @@ export default function App() {
   const isMobile = width < 860;
   const isDesktop = width >= 1200;
 
+  const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
@@ -129,6 +159,42 @@ export default function App() {
     );
   }
 
+  if (currentPage === "resources") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+        <View style={styles.appShell}>
+          <View style={styles.navbar}>
+            <View style={styles.brandRow}>
+              <Image source={require("./assets/logo.jpg")} style={styles.logo} />
+              <Text style={styles.brand}>MTC FIRE ACADEMY</Text>
+            </View>
+            <Pressable style={styles.loginButton} onPress={() => setCurrentPage("home")}>
+              <Text style={styles.loginButtonText}>Back Home</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.resourcesContent}>
+            <Text style={styles.resourcesTitle}>Student Resources</Text>
+            <Text style={styles.resourcesSubtitle}>
+              Tap a resource to open it. Share your final links and I will replace these placeholders.
+            </Text>
+
+            {RESOURCE_LINKS.map((item) => (
+              <Pressable key={item.id} style={styles.resourceCard} onPress={() => Linking.openURL(item.url)}>
+                <View style={styles.resourceTextWrap}>
+                  <Text style={styles.resourceLabel}>{item.label}</Text>
+                  <Text style={styles.resourceNote}>{item.note}</Text>
+                </View>
+                <Text style={styles.resourceArrow}>↗</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -144,10 +210,13 @@ export default function App() {
               <Text style={styles.menuIcon}>☰</Text>
             ) : (
               <View style={styles.navLinksRow}>
-                <Text style={styles.navLink}>Home</Text>
+                <Pressable onPress={() => setCurrentPage("home")}>
+                  <Text style={styles.navLink}>Home</Text>
+                </Pressable>
                 <Text style={styles.navLink}>POs</Text>
-                <Text style={styles.navLink}>Study Tools</Text>
-                <Text style={styles.navLink}>Resources</Text>
+                <Pressable onPress={() => setCurrentPage("resources")}>
+                  <Text style={styles.navLink}>Student Resources</Text>
+                </Pressable>
                 <Text style={styles.navLink}>Contact</Text>
                 <Pressable style={styles.loginButton}>
                   <Text style={styles.loginButtonText}>Student Login</Text>
@@ -174,10 +243,7 @@ export default function App() {
             <Pressable style={[styles.quickCard, styles.quickCardYellow]}>
               <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
             </Pressable>
-            <Pressable style={[styles.quickCard, styles.quickCardRed]}>
-              <Text style={styles.quickCardTitle}>Study Tools</Text>
-            </Pressable>
-            <Pressable style={[styles.quickCard, styles.quickCardBlue]}>
+            <Pressable style={[styles.quickCard, styles.quickCardBlue]} onPress={() => setCurrentPage("resources")}>
               <Text style={styles.quickCardTitle}>Student Resources</Text>
             </Pressable>
           </View>
@@ -246,8 +312,12 @@ export default function App() {
 
         {isMobile ? (
           <View style={styles.mobileTabBar}>
-            <Text style={styles.mobileTab}>Home</Text>
-            <Text style={styles.mobileTab}>Materials</Text>
+            <Pressable onPress={() => setCurrentPage("home")}>
+              <Text style={styles.mobileTab}>Home</Text>
+            </Pressable>
+            <Pressable onPress={() => setCurrentPage("resources")}>
+              <Text style={styles.mobileTab}>Student Resources</Text>
+            </Pressable>
             <Text style={styles.mobileTab}>Contact</Text>
           </View>
         ) : null}
@@ -410,6 +480,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   mobileTab: { color: "#eff4ff", fontSize: 13, fontWeight: "700" },
+  resourcesContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 10 },
+  resourcesTitle: { color: "#1c2430", fontSize: 32, fontWeight: "900" },
+  resourcesSubtitle: { color: "#3d4f67", fontSize: 16, lineHeight: 22, marginBottom: 8 },
+  resourceCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#d8e0ef",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  resourceTextWrap: { flex: 1, gap: 4, paddingRight: 10 },
+  resourceLabel: { color: "#1b2a3f", fontSize: 18, fontWeight: "800" },
+  resourceNote: { color: "#586b86", fontSize: 14 },
+  resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
   readerContainer: { flex: 1, padding: 12, backgroundColor: "#09121c" },
   readerHeader: { marginBottom: 10, gap: 4 },
   readerLogoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
