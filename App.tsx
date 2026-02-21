@@ -89,14 +89,17 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [poViewer, setPoViewer] = useState<{ url: string; title: string; page: string } | null>(null);
 
   const goHome = () => {
     setCurrentPage("home");
+    setPoViewer(null);
   };
 
   const openPoPage = () => {
     setCurrentPage("po");
     setSectionFilter("all");
+    setPoViewer(null);
   };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
@@ -126,11 +129,12 @@ export default function App() {
   const openObjective = (objective: PerformanceObjective) => {
     const pdfUrl = buildPdfUrl(extractStartPage(objective.page));
     if (Platform.OS === "web") {
-      const maybeOpen = (globalThis as { open?: (url?: string, target?: string, features?: string) => void }).open;
-      if (maybeOpen) {
-        maybeOpen(pdfUrl, "_blank", "noopener,noreferrer");
-        return;
-      }
+      setPoViewer({
+        url: pdfUrl,
+        title: objective.title,
+        page: objective.page,
+      });
+      return;
     }
     Linking.openURL(pdfUrl);
   };
@@ -264,6 +268,35 @@ export default function App() {
                 </View>
               </View>
             </ScrollView>
+            {poViewer ? (
+              <View style={styles.viewerOverlay}>
+                <View style={styles.viewerCard}>
+                  <View style={styles.viewerHeader}>
+                    <View style={styles.viewerHeaderTextWrap}>
+                      <Text style={styles.viewerTitle}>{poViewer.title}</Text>
+                      <Text style={styles.viewerSubtitle}>Printed Page {poViewer.page}</Text>
+                    </View>
+                    <Pressable style={styles.viewerCloseButton} onPress={() => setPoViewer(null)}>
+                      <Text style={styles.viewerCloseText}>Close</Text>
+                    </Pressable>
+                  </View>
+                  {Platform.OS === "web" ? (
+                    React.createElement("iframe", {
+                      src: poViewer.url,
+                      title: "PO Viewer",
+                      style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
+                    })
+                  ) : (
+                    <View style={styles.viewerNativeFallback}>
+                      <Text style={styles.viewerNativeText}>Open this PO in your device browser.</Text>
+                      <Pressable style={styles.viewerOpenExternal} onPress={() => Linking.openURL(poViewer.url)}>
+                        <Text style={styles.viewerOpenExternalText}>Open External</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ) : null}
           </View>
         </PageBackground>
       </SafeAreaView>
@@ -482,5 +515,47 @@ const styles = StyleSheet.create({
   resourceLabel: { color: "#1b2a3f", fontSize: 18, fontWeight: "800" },
   resourceNote: { color: "#586b86", fontSize: 14 },
   resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
+
+  viewerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 18,
+  },
+  viewerCard: {
+    width: "100%",
+    maxWidth: 1100,
+    height: "86%",
+    backgroundColor: "#0f1725",
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#334865",
+  },
+  viewerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#111f47",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#2f4573",
+  },
+  viewerHeaderTextWrap: { flex: 1, paddingRight: 10 },
+  viewerTitle: { color: "#f2f6ff", fontWeight: "800", fontSize: 14 },
+  viewerSubtitle: { color: "#b6c5dc", fontSize: 12, marginTop: 2 },
+  viewerCloseButton: {
+    backgroundColor: "#d3363b",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  viewerCloseText: { color: "#fff", fontWeight: "800", fontSize: 12 },
+  viewerNativeFallback: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
+  viewerNativeText: { color: "#e5edf8", fontSize: 15 },
+  viewerOpenExternal: { backgroundColor: "#f3ca34", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10 },
+  viewerOpenExternalText: { color: "#1c1e22", fontWeight: "800" },
 
 });
