@@ -32,6 +32,7 @@ type ReaderSelection = {
 };
 
 const PDF_PATH = "/fire-academy-pos.pdf";
+const BACKGROUND_IMAGE = require("./assets/hero.png");
 type AppPage = "home" | "resources";
 
 type ResourceLink = {
@@ -153,38 +154,41 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <View style={styles.appShell}>
-          {renderTopBanner()}
-          <View style={styles.readerContainer}>
-            <View style={styles.readerInfo}>
-            <Text style={styles.readerTitle}>{readerSelection.title}</Text>
-            <Text style={styles.readerSubtitle}>
-              {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
-            </Text>
-          </View>
-
-          <View style={styles.readerFrameWrap}>
-            {Platform.OS === "web" ? (
-              React.createElement("iframe", {
-                src: pdfUrl,
-                title: "Fire Academy Performance Objectives PDF",
-                style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
-              })
-            ) : (
-              <View style={styles.nativeFallback}>
-                <Text style={styles.nativeFallbackText}>Tap below to open the PO PDF at the selected page.</Text>
-                <Pressable style={styles.viewerOpenButton} onPress={() => Linking.openURL(pdfUrl)}>
-                  <Text style={styles.viewerOpenButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
-                </Pressable>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
+          <View style={styles.pageOverlay} />
+          <View style={styles.appShell}>
+            {renderTopBanner()}
+            <View style={styles.readerContainer}>
+              <View style={styles.readerInfo}>
+                <Text style={styles.readerTitle}>{readerSelection.title}</Text>
+                <Text style={styles.readerSubtitle}>
+                  {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
+                </Text>
               </View>
-            )}
-          </View>
 
-          <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
-            <Text style={styles.backButtonText}>Back to Table of Contents</Text>
-          </Pressable>
+              <View style={styles.readerFrameWrap}>
+                {Platform.OS === "web" ? (
+                  React.createElement("iframe", {
+                    src: pdfUrl,
+                    title: "Fire Academy Performance Objectives PDF",
+                    style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
+                  })
+                ) : (
+                  <View style={styles.nativeFallback}>
+                    <Text style={styles.nativeFallbackText}>Tap below to open the PO PDF at the selected page.</Text>
+                    <Pressable style={styles.viewerOpenButton} onPress={() => Linking.openURL(pdfUrl)}>
+                      <Text style={styles.viewerOpenButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+
+              <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
+                <Text style={styles.backButtonText}>Back to Table of Contents</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </ImageBackground>
       </SafeAreaView>
     );
   }
@@ -193,26 +197,29 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <View style={styles.appShell}>
-          {renderTopBanner()}
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
+          <View style={styles.pageOverlay} />
+          <View style={styles.appShell}>
+            {renderTopBanner()}
 
-          <ScrollView contentContainerStyle={styles.resourcesContent}>
-            <Text style={styles.resourcesTitle}>Student Resources</Text>
-            <Text style={styles.resourcesSubtitle}>
-              Tap a resource to open it. Share your final links and I will replace these placeholders.
-            </Text>
+            <ScrollView contentContainerStyle={styles.resourcesContent}>
+              <Text style={styles.resourcesTitle}>Student Resources</Text>
+              <Text style={styles.resourcesSubtitle}>
+                Tap a resource to open it. Share your final links and I will replace these placeholders.
+              </Text>
 
-            {RESOURCE_LINKS.map((item) => (
-              <Pressable key={item.id} style={styles.resourceCard} onPress={() => Linking.openURL(item.url)}>
-                <View style={styles.resourceTextWrap}>
-                  <Text style={styles.resourceLabel}>{item.label}</Text>
-                  <Text style={styles.resourceNote}>{item.note}</Text>
-                </View>
-                <Text style={styles.resourceArrow}>↗</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+              {RESOURCE_LINKS.map((item) => (
+                <Pressable key={item.id} style={styles.resourceCard} onPress={() => Linking.openURL(item.url)}>
+                  <View style={styles.resourceTextWrap}>
+                    <Text style={styles.resourceLabel}>{item.label}</Text>
+                    <Text style={styles.resourceNote}>{item.note}</Text>
+                  </View>
+                  <Text style={styles.resourceArrow}>↗</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </ImageBackground>
       </SafeAreaView>
     );
   }
@@ -220,12 +227,13 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
-      <View style={styles.appShell}>
-        <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
-          {renderTopBanner()}
+      <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
+        <View style={styles.pageOverlay} />
+        <View style={styles.appShell}>
+          <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
+            {renderTopBanner()}
 
-          <ImageBackground source={require("./assets/hero.png")} style={styles.hero} imageStyle={styles.heroImage}>
-            <View style={styles.heroOverlay} />
+          <View style={styles.hero}>
             <View style={styles.heroContent}>
               <Text style={styles.heroKicker}>WELCOME TO</Text>
               <Text style={styles.heroTitle}>MTC FIRE ACADEMY</Text>
@@ -236,7 +244,7 @@ export default function App() {
                 <Text style={styles.getStartedText}>Performance Objectives (POs)</Text>
               </Pressable>
             </View>
-          </ImageBackground>
+          </View>
 
           <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
             <Pressable style={[styles.quickCard, styles.quickCardYellow]}>
@@ -307,27 +315,34 @@ export default function App() {
               </View>
             ) : null}
           </View>
-        </ScrollView>
+          </ScrollView>
 
-        {isMobile ? (
-          <View style={styles.mobileTabBar}>
-            <Pressable onPress={() => setCurrentPage("home")}>
-              <Text style={styles.mobileTab}>Home</Text>
-            </Pressable>
-            <Pressable onPress={() => setCurrentPage("resources")}>
-              <Text style={styles.mobileTab}>Student Resources</Text>
-            </Pressable>
-            <Text style={styles.mobileTab}>Contact</Text>
-          </View>
-        ) : null}
-      </View>
+          {isMobile ? (
+            <View style={styles.mobileTabBar}>
+              <Pressable onPress={() => setCurrentPage("home")}>
+                <Text style={styles.mobileTab}>Home</Text>
+              </Pressable>
+              <Pressable onPress={() => setCurrentPage("resources")}>
+                <Text style={styles.mobileTab}>Student Resources</Text>
+              </Pressable>
+              <Text style={styles.mobileTab}>Contact</Text>
+            </View>
+          ) : null}
+        </View>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#d8d8db" },
-  appShell: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: "#0d1320" },
+  pageBackground: { flex: 1 },
+  pageBackgroundImage: { resizeMode: "cover" },
+  pageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 16, 30, 0.45)",
+  },
+  appShell: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { paddingBottom: 26 },
   scrollContentMobile: { paddingBottom: 84 },
   navbar: {
@@ -351,12 +366,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: { color: "#fff", fontWeight: "800", fontSize: 14 },
   menuIcon: { color: "#fff", fontSize: 26, fontWeight: "700" },
-  hero: { minHeight: 290, justifyContent: "center" },
-  heroImage: { resizeMode: "cover" },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 18, 36, 0.55)",
-  },
+  hero: { minHeight: 290, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.4)" },
   heroContent: { paddingHorizontal: 24, paddingVertical: 26, maxWidth: 620, gap: 8 },
   heroKicker: { color: "#eaf1ff", fontSize: 20, fontWeight: "700" },
   heroTitle: { color: "#ffffff", fontSize: 48, lineHeight: 52, fontWeight: "900" },
