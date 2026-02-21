@@ -229,10 +229,6 @@ export default function App() {
           <Pressable onPress={() => setCurrentPage("resources")}>
             <Text style={styles.navLink}>Student Resources</Text>
           </Pressable>
-          <Text style={styles.navLink}>Contact</Text>
-          <Pressable style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Student Login</Text>
-          </Pressable>
         </View>
       )}
     </View>
@@ -473,13 +469,6 @@ const styles = StyleSheet.create({
   brand: { color: "#f6f8ff", fontSize: 17, fontWeight: "800" },
   navLinksRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   navLink: { color: "#f0f5ff", fontSize: 15, fontWeight: "600" },
-  loginButton: {
-    backgroundColor: "#d3363b",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  loginButtonText: { color: "#fff", fontWeight: "800", fontSize: 14 },
   menuIcon: { color: "#fff", fontSize: 26, fontWeight: "700" },
 
   hero: { minHeight: 320, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.2)" },
