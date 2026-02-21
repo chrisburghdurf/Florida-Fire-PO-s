@@ -469,12 +469,11 @@ export default function App() {
                 <Text style={styles.heroSubtitle}>
                   Prepare for your Florida State Fire Exam and navigate your Performance Objectives quickly.
                 </Text>
-                <Pressable style={styles.getStartedButton} onPress={openPoPage}>
-                  <Text style={styles.getStartedText}>Performance Objectives (POs)</Text>
-                </Pressable>
               </View>
             </View>
+          </ScrollView>
 
+          <View style={[styles.quickActionsDock, isMobile && styles.quickActionsDockMobile]}>
             <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
               <Pressable style={[styles.quickCard, styles.quickCardYellow]} onPress={openPoPage}>
                 <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
@@ -483,7 +482,7 @@ export default function App() {
                 <Text style={styles.quickCardTitle}>Student Resources</Text>
               </Pressable>
             </View>
-          </ScrollView>
+          </View>
 
           {isMobile ? (
             <View style={styles.mobileTabBar}>
@@ -539,22 +538,20 @@ const styles = StyleSheet.create({
   heroKicker: { color: "#eaf1ff", fontSize: 20, fontWeight: "700" },
   heroTitle: { color: "#ffffff", fontSize: 48, lineHeight: 52, fontWeight: "900" },
   heroSubtitle: { color: "#e9eef9", fontSize: 23, lineHeight: 34, fontWeight: "500", maxWidth: 600 },
-  getStartedButton: {
-    backgroundColor: "#f4cc34",
-    alignSelf: "flex-start",
-    borderRadius: 8,
-    paddingHorizontal: 26,
-    paddingVertical: 12,
-    marginTop: 8,
+  quickActionsDock: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 16,
+    paddingHorizontal: 16,
   },
-  getStartedText: { color: "#1a1a12", fontSize: 30, fontWeight: "800" },
-
+  quickActionsDockMobile: {
+    bottom: 64,
+  },
   quickActions: {
     flexDirection: "row",
     gap: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: "rgba(236, 238, 242, 0.58)",
+    backgroundColor: "transparent",
   },
   quickActionsMobile: { flexDirection: "column" },
   quickCard: {
@@ -562,8 +559,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
+    borderWidth: 0,
   },
   quickCardYellow: { backgroundColor: "#f3ca34" },
   quickCardBlue: { backgroundColor: "#253f66" },
