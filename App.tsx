@@ -24,13 +24,6 @@ type ObjectiveSection = {
   data: PerformanceObjective[];
 };
 
-type ReaderSelection = {
-  title: string;
-  sectionTitle: string;
-  pageLabel: string;
-  startPage: number;
-};
-
 type ResourceLink = {
   id: string;
   label: string;
@@ -91,17 +84,15 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
-  const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   const goHome = () => {
     setCurrentPage("home");
-    setReaderSelection(null);
   };
 
   const openPoPage = () => {
     setCurrentPage("po");
     setSectionFilter("all");
-    setReaderSelection(null);
   };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
@@ -128,13 +119,23 @@ export default function App() {
 
   const totalObjectives = useMemo(() => sections.reduce((sum, section) => sum + section.data.length, 0), [sections]);
 
-  const openObjective = (objective: PerformanceObjective, sectionTitle: string) => {
-    setReaderSelection({
-      title: objective.title,
-      sectionTitle,
-      pageLabel: objective.page,
-      startPage: extractStartPage(objective.page),
-    });
+  const openObjective = (objective: PerformanceObjective) => {
+    const pdfUrl = buildPdfUrl(extractStartPage(objective.page));
+    if (Platform.OS === "web") {
+      const maybeOpen = (globalThis as { open?: (url?: string, target?: string, features?: string) => void }).open;
+      if (maybeOpen) {
+        maybeOpen(pdfUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+    }
+    Linking.openURL(pdfUrl);
+  };
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
   };
 
   const renderTopBanner = () => (
@@ -165,56 +166,6 @@ export default function App() {
       )}
     </View>
   );
-
-  if (readerSelection) {
-    const pdfUrl = buildPdfUrl(readerSelection.startPage);
-
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light" />
-        <PageBackground>
-          <View style={styles.appShell}>
-            {renderTopBanner()}
-            <View style={styles.readerContainer}>
-              <View style={styles.readerInfo}>
-                <Text style={styles.readerTitle}>{readerSelection.title}</Text>
-                <Text style={styles.readerSubtitle}>
-                  {readerSelection.sectionTitle} • p. {readerSelection.pageLabel}
-                </Text>
-              </View>
-
-              <View style={styles.readerFrameWrap}>
-                {Platform.OS === "web" ? (
-                  React.createElement("iframe", {
-                    src: pdfUrl,
-                    title: "Fire Academy Performance Objectives PDF",
-                    style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
-                  })
-                ) : (
-                  <View style={styles.nativeFallback}>
-                    <Text style={styles.nativeFallbackText}>Tap below to open the PO PDF at the selected page.</Text>
-                    <Pressable style={styles.viewerOpenButton} onPress={() => Linking.openURL(pdfUrl)}>
-                      <Text style={styles.viewerOpenButtonText}>Open PDF at Page {readerSelection.startPage}</Text>
-                    </Pressable>
-                  </View>
-                )}
-              </View>
-
-              <Pressable
-                style={styles.backButton}
-                onPress={() => {
-                  setReaderSelection(null);
-                  setCurrentPage("po");
-                }}
-              >
-                <Text style={styles.backButtonText}>Back to Table of Contents</Text>
-              </Pressable>
-            </View>
-          </View>
-        </PageBackground>
-      </SafeAreaView>
-    );
-  }
 
   if (currentPage === "resources") {
     return (
@@ -287,19 +238,25 @@ export default function App() {
                     {sections.length} sections • {totalObjectives} objectives
                   </Text>
 
-                  {sections.map((section) => (
-                    <View key={section.id} style={styles.sectionCard}>
-                      <Text style={styles.sectionTitle}>{section.title}</Text>
-                      {section.data.map((objective) => (
-                        <View key={objective.id} style={styles.objectiveRow}>
-                          <Text style={styles.objectiveText}>{objective.title}</Text>
-                          <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
-                            <Text style={styles.pageLinkText}>p. {objective.page}</Text>
-                          </Pressable>
-                        </View>
-                      ))}
-                    </View>
-                  ))}
+                  {sections.map((section) => {
+                    const open = !!expandedSections[section.id];
+                    return (
+                      <View key={section.id} style={styles.sectionCard}>
+                        <Pressable style={styles.sectionToggle} onPress={() => toggleSection(section.id)}>
+                          <Text style={styles.sectionTitle}>{section.title}</Text>
+                          <Text style={styles.sectionChevron}>{open ? "▾" : "▸"}</Text>
+                        </Pressable>
+                        {open
+                          ? section.data.map((objective) => (
+                              <Pressable key={objective.id} style={styles.objectiveRow} onPress={() => openObjective(objective)}>
+                                <Text style={styles.objectiveText}>{objective.title}</Text>
+                                <Text style={styles.pageLinkText}>p. {objective.page}</Text>
+                              </Pressable>
+                            ))
+                          : null}
+                      </View>
+                    );
+                  })}
                 </View>
               </View>
             </ScrollView>
@@ -471,6 +428,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: { color: "#1f2e44", fontSize: 19, fontWeight: "800", marginBottom: 8 },
+  sectionToggle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  sectionChevron: { color: "#1d3f78", fontSize: 20, fontWeight: "800" },
   objectiveRow: {
     flexDirection: "row",
     gap: 10,
@@ -481,12 +445,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   objectiveText: { flex: 1, color: "#31465e", fontSize: 14, fontWeight: "500" },
-  pageLink: {
-    backgroundColor: "#f4cc34",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
   pageLinkText: { color: "#1c1e22", fontWeight: "800", fontSize: 12 },
 
   mobileTabBar: {
@@ -521,30 +479,4 @@ const styles = StyleSheet.create({
   resourceNote: { color: "#586b86", fontSize: 14 },
   resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
 
-  readerContainer: { flex: 1, padding: 12, backgroundColor: "rgba(9, 18, 28, 0.5)" },
-  readerInfo: { marginBottom: 10, gap: 4 },
-  readerTitle: { color: "#fff", fontWeight: "800", fontSize: 18 },
-  readerSubtitle: { color: "#b7c6db", fontSize: 13 },
-  readerFrameWrap: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#2b3f57",
-    backgroundColor: "#0a1119",
-  },
-  nativeFallback: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 20 },
-  nativeFallbackText: { color: "#e7eef8", textAlign: "center", fontSize: 15 },
-  viewerOpenButton: { backgroundColor: "#f4cc34", borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 },
-  viewerOpenButtonText: { color: "#1a1e26", fontWeight: "800" },
-  backButton: {
-    marginTop: 10,
-    backgroundColor: "#1d3f78",
-    borderWidth: 1,
-    borderColor: "#3f639f",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  backButtonText: { color: "#fff", fontWeight: "800", fontSize: 15 },
 });
