@@ -163,6 +163,14 @@ function buildPdfUrl(startPage: number): string {
   return `${PDF_PATH}#page=${Math.max(1, startPage)}&zoom=page-width`;
 }
 
+function withCacheBust(url: string): string {
+  const hashIndex = url.indexOf("#");
+  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}v=${Date.now()}${hash}`;
+}
+
 function PageBackground(props: { children: React.ReactNode }) {
   return (
     <View style={styles.pageRoot}>
@@ -253,7 +261,8 @@ export default function App() {
   const totalObjectives = useMemo(() => sections.reduce((sum, section) => sum + section.data.length, 0), [sections]);
 
   const openObjective = (objective: PerformanceObjective) => {
-    const pdfUrl = buildPdfUrl(extractStartPage(objective.page));
+    const basePdfUrl = buildPdfUrl(extractStartPage(objective.page));
+    const pdfUrl = Platform.OS === "web" && isMobile ? withCacheBust(basePdfUrl) : basePdfUrl;
     if (Platform.OS === "web") {
       setPoViewer({
         url: pdfUrl,
@@ -464,6 +473,7 @@ export default function App() {
                   </View>
                   {Platform.OS === "web" ? (
                     React.createElement("iframe", {
+                      key: poViewer.url,
                       src: poViewer.url,
                       title: "PO Viewer",
                       style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
