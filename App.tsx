@@ -35,7 +35,7 @@ const PDF_PATH = "/fire-academy-pos.pdf";
 const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
 // Printed page numbers in the PO manual start after front matter.
 // This offset maps printed footer numbers to actual PDF page indices.
-const PRINTED_TO_PDF_OFFSET = 8;
+const PRINTED_TO_PDF_OFFSET = 17;
 
 const RESOURCE_LINKS: ResourceLink[] = [
   {
