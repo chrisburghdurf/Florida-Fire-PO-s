@@ -138,16 +138,19 @@ export default function App() {
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [poViewer, setPoViewer] = useState<{ url: string; title: string; page: string } | null>(null);
+  const [resourceViewer, setResourceViewer] = useState<{ url: string; title: string; note: string } | null>(null);
 
   const goHome = () => {
     setCurrentPage("home");
     setPoViewer(null);
+    setResourceViewer(null);
   };
 
   const openPoPage = () => {
     setCurrentPage("po");
     setSectionFilter("all");
     setPoViewer(null);
+    setResourceViewer(null);
   };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
@@ -194,6 +197,18 @@ export default function App() {
     }));
   };
 
+  const openResource = (item: ResourceLink) => {
+    if (Platform.OS === "web") {
+      setResourceViewer({
+        url: item.url,
+        title: item.label,
+        note: item.note,
+      });
+      return;
+    }
+    Linking.openURL(item.url);
+  };
+
   const renderTopBanner = () => (
     <View style={styles.navbar}>
       <Pressable style={styles.brandRow} onPress={goHome}>
@@ -237,7 +252,7 @@ export default function App() {
               </Text>
 
               {RESOURCE_LINKS.map((item) => (
-                <Pressable key={item.id} style={styles.resourceCard} onPress={() => Linking.openURL(item.url)}>
+                <Pressable key={item.id} style={styles.resourceCard} onPress={() => openResource(item)}>
                   <View style={styles.resourceTextWrap}>
                     <Text style={styles.resourceLabel}>{item.label}</Text>
                     <Text style={styles.resourceNote}>{item.note}</Text>
@@ -246,6 +261,35 @@ export default function App() {
                 </Pressable>
               ))}
             </ScrollView>
+            {resourceViewer ? (
+              <View style={styles.viewerOverlay}>
+                <View style={styles.viewerCard}>
+                  <View style={styles.viewerHeader}>
+                    <View style={styles.viewerHeaderTextWrap}>
+                      <Text style={styles.viewerTitle}>{resourceViewer.title}</Text>
+                      <Text style={styles.viewerSubtitle}>{resourceViewer.note}</Text>
+                    </View>
+                    <Pressable style={styles.viewerCloseButton} onPress={() => setResourceViewer(null)}>
+                      <Text style={styles.viewerCloseText}>Back to Resources</Text>
+                    </Pressable>
+                  </View>
+                  {Platform.OS === "web" ? (
+                    React.createElement("iframe", {
+                      src: resourceViewer.url,
+                      title: "Student Resource Viewer",
+                      style: { border: "0", width: "100%", height: "100%", backgroundColor: "#0a1119" },
+                    })
+                  ) : (
+                    <View style={styles.viewerNativeFallback}>
+                      <Text style={styles.viewerNativeText}>Open this resource in your device browser.</Text>
+                      <Pressable style={styles.viewerOpenExternal} onPress={() => Linking.openURL(resourceViewer.url)}>
+                        <Text style={styles.viewerOpenExternalText}>Open External</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ) : null}
           </View>
         </PageBackground>
       </SafeAreaView>
