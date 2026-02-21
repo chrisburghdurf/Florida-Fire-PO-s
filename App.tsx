@@ -32,7 +32,7 @@ type ReaderSelection = {
 };
 
 const PDF_PATH = "/fire-academy-pos.pdf";
-const BACKGROUND_IMAGE = require("./assets/hero.png");
+const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
 type AppPage = "home" | "resources";
 
 type ResourceLink = {
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#eceef2",
+    backgroundColor: "rgba(236, 238, 242, 0.78)",
   },
   quickActionsMobile: { flexDirection: "column" },
   quickCard: {
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   quickCardRed: { backgroundColor: "#cb3540" },
   quickCardBlue: { backgroundColor: "#253f66" },
   quickCardTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
-  mainArea: { paddingHorizontal: 16, paddingTop: 10, gap: 12 },
+  mainArea: { paddingHorizontal: 16, paddingTop: 10, gap: 12, backgroundColor: "rgba(236, 238, 242, 0.62)" },
   mainAreaDesktop: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   mainColumn: { flex: 1 },
   mainHeading: { fontSize: 30, fontWeight: "800", color: "#1c2430", marginBottom: 6 },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   chipTextActive: { color: "#fff" },
   resultMeta: { color: "#34475f", fontWeight: "600", marginBottom: 8 },
   sectionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#dde3ef",
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   pageLinkText: { color: "#1c1e22", fontWeight: "800", fontSize: 12 },
   sidebar: {
     width: 280,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#dde3ef",
@@ -489,11 +489,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   mobileTab: { color: "#eff4ff", fontSize: 13, fontWeight: "700" },
-  resourcesContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 10 },
+  resourcesContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 10, backgroundColor: "rgba(236, 238, 242, 0.62)" },
   resourcesTitle: { color: "#1c2430", fontSize: 32, fontWeight: "900" },
   resourcesSubtitle: { color: "#3d4f67", fontSize: 16, lineHeight: 22, marginBottom: 8 },
   resourceCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#d8e0ef",
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   resourceLabel: { color: "#1b2a3f", fontSize: 18, fontWeight: "800" },
   resourceNote: { color: "#586b86", fontSize: 14 },
   resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
-  readerContainer: { flex: 1, padding: 12, backgroundColor: "#09121c" },
+  readerContainer: { flex: 1, padding: 12, backgroundColor: "rgba(9, 18, 28, 0.5)" },
   readerInfo: { marginBottom: 10, gap: 4 },
   readerHeader: { marginBottom: 10, gap: 4 },
   readerLogoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
