@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Image,
   Linking,
@@ -38,6 +38,8 @@ type ResourceCategory = {
 
 const PDF_PATH = "/fire-academy-pos.pdf";
 const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
+const APPLE_TOUCH_ICON = "/apple-touch-icon.png";
+const WEB_MANIFEST = "/manifest.webmanifest";
 
 const PO_SECTION_PAGE_MAP: Array<{ start: number; end: number; file: string }> = [
   { start: 1, end: 5, file: "/po-sections/01-INTRODUCTION.pdf" },
@@ -172,6 +174,35 @@ function PageBackground(props: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+
+    const ensureLink = (rel: string, href: string) => {
+      let link = document.head.querySelector(`link[rel=\"${rel}\"]`) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = rel;
+        document.head.appendChild(link);
+      }
+      link.href = href;
+    };
+
+    const ensureMeta = (name: string, content: string) => {
+      let meta = document.head.querySelector(`meta[name=\"${name}\"]`) as HTMLMetaElement | null;
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    ensureLink("apple-touch-icon", APPLE_TOUCH_ICON);
+    ensureLink("manifest", WEB_MANIFEST);
+    ensureMeta("apple-mobile-web-app-capable", "yes");
+    ensureMeta("apple-mobile-web-app-title", "MTC Fire Academy");
+  }, []);
+
   const { width } = useWindowDimensions();
   const isMobile = width < 860;
   const isDesktop = width >= 1200;
