@@ -39,6 +39,12 @@ const PRINTED_TO_PDF_OFFSET = 8;
 
 const RESOURCE_LINKS: ResourceLink[] = [
   {
+    id: "resource-fire-college",
+    label: "Florida State Fire College",
+    url: "https://myfloridacfo.com/division/sfm/bfst",
+    note: "Official state fire standards and training",
+  },
+  {
     id: "rope-1",
     label: "Overhand Knot",
     url: "https://www.animatedknots.com/overhand-knot",
