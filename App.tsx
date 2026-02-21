@@ -30,6 +30,11 @@ type ResourceLink = {
   url: string;
   note: string;
 };
+type ResourceCategory = {
+  id: string;
+  title: string;
+  links: ResourceLink[];
+};
 
 const PDF_PATH = "/fire-academy-pos.pdf";
 const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
@@ -37,72 +42,96 @@ const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
 // This offset maps printed footer numbers to actual PDF page indices.
 const PRINTED_TO_PDF_OFFSET = 17;
 
-const RESOURCE_LINKS: ResourceLink[] = [
+const RESOURCE_CATEGORIES: ResourceCategory[] = [
   {
-    id: "resource-fire-college",
-    label: "Florida State Fire College",
-    url: "https://myfloridacfo.com/division/sfm/bfst",
-    note: "Official state fire standards and training",
+    id: "bfst",
+    title: "Bureau of Fire Standards and Training",
+    links: [
+      {
+        id: "resource-fire-college",
+        label: "Official BFST Portal",
+        url: "https://myfloridacfo.com/division/sfm/bfst",
+        note: "State fire standards and training",
+      },
+    ],
   },
   {
-    id: "rope-1",
-    label: "Overhand Knot",
-    url: "https://www.animatedknots.com/overhand-knot",
-    note: "Ropes & Knots",
+    id: "ropes-knots-help",
+    title: "Ropes and Knots Help",
+    links: [
+      {
+        id: "rope-1",
+        label: "Overhand Knot",
+        url: "https://www.animatedknots.com/overhand-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-2",
+        label: "Figure 8 Knot",
+        url: "https://www.animatedknots.com/figure-8-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-3",
+        label: "Half Hitch Knot",
+        url: "https://www.animatedknots.com/half-hitch-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-4",
+        label: "Sheet Bend Knot",
+        url: "https://www.animatedknots.com/sheet-bend-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-5",
+        label: "Figure 8 Bend Knot",
+        url: "https://www.animatedknots.com/figure-8-bend-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-6",
+        label: "Water Knot",
+        url: "https://www.animatedknots.com/water-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-7",
+        label: "Clove Hitch (Rope End)",
+        url: "https://www.animatedknots.com/clove-hitch-knot-rope-end",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-8",
+        label: "Clove Hitch (Half Hitches)",
+        url: "https://www.animatedknots.com/clove-hitch-knot-half-hitches",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-9",
+        label: "Bowline on a Bight",
+        url: "https://www.animatedknots.com/bowline-on-a-bight-knot",
+        note: "Ropes & Knots",
+      },
+      {
+        id: "rope-10",
+        label: "Bowline Knot",
+        url: "https://www.animatedknots.com/bowline-knot",
+        note: "Ropes & Knots",
+      },
+    ],
   },
   {
-    id: "rope-2",
-    label: "Figure 8 Knot",
-    url: "https://www.animatedknots.com/figure-8-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-3",
-    label: "Half Hitch Knot",
-    url: "https://www.animatedknots.com/half-hitch-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-4",
-    label: "Sheet Bend Knot",
-    url: "https://www.animatedknots.com/sheet-bend-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-5",
-    label: "Figure 8 Bend Knot",
-    url: "https://www.animatedknots.com/figure-8-bend-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-6",
-    label: "Water Knot",
-    url: "https://www.animatedknots.com/water-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-7",
-    label: "Clove Hitch (Rope End)",
-    url: "https://www.animatedknots.com/clove-hitch-knot-rope-end",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-8",
-    label: "Clove Hitch (Half Hitches)",
-    url: "https://www.animatedknots.com/clove-hitch-knot-half-hitches",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-9",
-    label: "Bowline on a Bight",
-    url: "https://www.animatedknots.com/bowline-on-a-bight-knot",
-    note: "Ropes & Knots",
-  },
-  {
-    id: "rope-10",
-    label: "Bowline Knot",
-    url: "https://www.animatedknots.com/bowline-knot",
-    note: "Ropes & Knots",
+    id: "hazmat-erg-practice",
+    title: "Hazmat ERG Practice",
+    links: [
+      {
+        id: "hazmat-erg-link",
+        label: "Open Hazmat ERG Practice",
+        url: "https://example.com/hazmat-erg-practice",
+        note: "Replace with your ERG practice link",
+      },
+    ],
   },
 ];
 
@@ -137,6 +166,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedResourceSections, setExpandedResourceSections] = useState<Record<string, boolean>>({});
   const [poViewer, setPoViewer] = useState<{ url: string; title: string; page: string } | null>(null);
   const [resourceViewer, setResourceViewer] = useState<{ url: string; title: string; note: string } | null>(null);
 
@@ -196,6 +226,12 @@ export default function App() {
       [sectionId]: !prev[sectionId],
     }));
   };
+  const toggleResourceSection = (sectionId: string) => {
+    setExpandedResourceSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
 
   const openResource = (item: ResourceLink) => {
     if (Platform.OS === "web") {
@@ -247,15 +283,28 @@ export default function App() {
                 Tap a resource to open it. Share your final links and I will replace these placeholders.
               </Text>
 
-              {RESOURCE_LINKS.map((item) => (
-                <Pressable key={item.id} style={styles.resourceCard} onPress={() => openResource(item)}>
-                  <View style={styles.resourceTextWrap}>
-                    <Text style={styles.resourceLabel}>{item.label}</Text>
-                    <Text style={styles.resourceNote}>{item.note}</Text>
+              {RESOURCE_CATEGORIES.map((category) => {
+                const open = !!expandedResourceSections[category.id];
+                return (
+                  <View key={category.id} style={styles.resourceCategoryCard}>
+                    <Pressable style={styles.resourceCategoryHeader} onPress={() => toggleResourceSection(category.id)}>
+                      <Text style={styles.resourceCategoryTitle}>{category.title}</Text>
+                      <Text style={styles.resourceCategoryChevron}>{open ? "▾" : "▸"}</Text>
+                    </Pressable>
+                    {open
+                      ? category.links.map((item) => (
+                          <Pressable key={item.id} style={styles.resourceLinkRow} onPress={() => openResource(item)}>
+                            <View style={styles.resourceTextWrap}>
+                              <Text style={styles.resourceLabel}>{item.label}</Text>
+                              <Text style={styles.resourceNote}>{item.note}</Text>
+                            </View>
+                            <Text style={styles.resourceArrow}>↗</Text>
+                          </Pressable>
+                        ))
+                      : null}
                   </View>
-                  <Text style={styles.resourceArrow}>↗</Text>
-                </Pressable>
-              ))}
+                );
+              })}
             </ScrollView>
             {resourceViewer ? (
               <View style={styles.viewerOverlay}>
@@ -582,15 +631,29 @@ const styles = StyleSheet.create({
   resourcesContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 10, backgroundColor: "rgba(236, 238, 242, 0.62)" },
   resourcesTitle: { color: "#1c2430", fontSize: 32, fontWeight: "900" },
   resourcesSubtitle: { color: "#3d4f67", fontSize: 16, lineHeight: 22, marginBottom: 8 },
-  resourceCard: {
+  resourceCategoryCard: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#d8e0ef",
-    padding: 14,
+    padding: 12,
+  },
+  resourceCategoryHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  resourceCategoryTitle: { color: "#1b2a3f", fontSize: 18, fontWeight: "800", flex: 1, paddingRight: 10 },
+  resourceCategoryChevron: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
+  resourceLinkRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#e5ebf5",
+    paddingTop: 10,
   },
   resourceTextWrap: { flex: 1, gap: 4, paddingRight: 10 },
   resourceLabel: { color: "#1b2a3f", fontSize: 18, fontWeight: "800" },
