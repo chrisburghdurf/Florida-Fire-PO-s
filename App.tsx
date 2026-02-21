@@ -321,8 +321,8 @@ export default function App() {
               })}
             </ScrollView>
             {resourceViewer ? (
-              <View style={styles.viewerOverlay}>
-                <View style={styles.viewerCard}>
+              <View style={[styles.viewerOverlay, isMobile && styles.viewerOverlayMobile]}>
+                <View style={[styles.viewerCard, isMobile && styles.viewerCardMobile]}>
                   <View style={styles.viewerHeader}>
                     <View style={styles.viewerHeaderTextWrap}>
                       <Text style={styles.viewerTitle}>{resourceViewer.title}</Text>
@@ -420,8 +420,8 @@ export default function App() {
               </View>
             </ScrollView>
             {poViewer ? (
-              <View style={styles.viewerOverlay}>
-                <View style={styles.viewerCard}>
+              <View style={[styles.viewerOverlay, isMobile && styles.viewerOverlayMobile]}>
+                <View style={[styles.viewerCard, isMobile && styles.viewerCardMobile]}>
                   <View style={styles.viewerHeader}>
                     <View style={styles.viewerHeaderTextWrap}>
                       <Text style={styles.viewerTitle}>{poViewer.title}</Text>
@@ -677,6 +677,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 18,
   },
+  viewerOverlayMobile: {
+    padding: 0,
+  },
   viewerCard: {
     width: "100%",
     maxWidth: 1100,
@@ -686,6 +689,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#334865",
+  },
+  viewerCardMobile: {
+    maxWidth: "100%",
+    width: "100%",
+    height: "100%",
+    borderRadius: 0,
+    borderWidth: 0,
   },
   viewerHeader: {
     flexDirection: "row",
