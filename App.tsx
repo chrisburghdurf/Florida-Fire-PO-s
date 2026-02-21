@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   Image,
-  ImageBackground,
   Linking,
   Platform,
   Pressable,
@@ -17,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { PERFORMANCE_SECTIONS, type PerformanceObjective } from "./src/data/performanceObjectives";
 
 type SectionFilter = "all" | string;
+type AppPage = "home" | "resources" | "po";
 
 type ObjectiveSection = {
   id: string;
@@ -31,16 +31,15 @@ type ReaderSelection = {
   startPage: number;
 };
 
-const PDF_PATH = "/fire-academy-pos.pdf";
-const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
-type AppPage = "home" | "resources";
-
 type ResourceLink = {
   id: string;
   label: string;
   url: string;
   note: string;
 };
+
+const PDF_PATH = "/fire-academy-pos.pdf";
+const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
 
 const RESOURCE_LINKS: ResourceLink[] = [
   {
@@ -74,20 +73,35 @@ function buildPdfUrl(startPage: number): string {
   return `${PDF_PATH}#page=${startPage}&zoom=page-width`;
 }
 
+function PageBackground(props: { children: React.ReactNode }) {
+  return (
+    <View style={styles.pageRoot}>
+      <Image source={BACKGROUND_IMAGE} style={styles.pageBgImage} resizeMode="contain" />
+      <View style={styles.pageOverlay} />
+      {props.children}
+    </View>
+  );
+}
+
 export default function App() {
   const { width } = useWindowDimensions();
   const isMobile = width < 860;
   const isDesktop = width >= 1200;
 
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
-  const [showObjectives, setShowObjectives] = useState(false);
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
+
   const goHome = () => {
     setCurrentPage("home");
     setReaderSelection(null);
-    setShowObjectives(false);
+  };
+
+  const openPoPage = () => {
+    setCurrentPage("po");
+    setSectionFilter("all");
+    setReaderSelection(null);
   };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
@@ -137,13 +151,7 @@ export default function App() {
           <Pressable onPress={goHome}>
             <Text style={styles.navLink}>Home</Text>
           </Pressable>
-          <Pressable
-            onPress={() => {
-              setCurrentPage("home");
-              setShowObjectives(true);
-              setSectionFilter("all");
-            }}
-          >
+          <Pressable onPress={openPoPage}>
             <Text style={styles.navLink}>POs</Text>
           </Pressable>
           <Pressable onPress={() => setCurrentPage("resources")}>
@@ -164,8 +172,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
-          <View style={styles.pageOverlay} />
+        <PageBackground>
           <View style={styles.appShell}>
             {renderTopBanner()}
             <View style={styles.readerContainer}>
@@ -193,12 +200,18 @@ export default function App() {
                 )}
               </View>
 
-              <Pressable style={styles.backButton} onPress={() => setReaderSelection(null)}>
+              <Pressable
+                style={styles.backButton}
+                onPress={() => {
+                  setReaderSelection(null);
+                  setCurrentPage("po");
+                }}
+              >
                 <Text style={styles.backButtonText}>Back to Table of Contents</Text>
               </Pressable>
             </View>
           </View>
-        </ImageBackground>
+        </PageBackground>
       </SafeAreaView>
     );
   }
@@ -207,11 +220,9 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
-        <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
-          <View style={styles.pageOverlay} />
+        <PageBackground>
           <View style={styles.appShell}>
             {renderTopBanner()}
-
             <ScrollView contentContainerStyle={styles.resourcesContent}>
               <Text style={styles.resourcesTitle}>Student Resources</Text>
               <Text style={styles.resourcesSubtitle}>
@@ -229,7 +240,71 @@ export default function App() {
               ))}
             </ScrollView>
           </View>
-        </ImageBackground>
+        </PageBackground>
+      </SafeAreaView>
+    );
+  }
+
+  if (currentPage === "po") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+        <PageBackground>
+          <View style={styles.appShell}>
+            {renderTopBanner()}
+            <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
+              <View style={[styles.mainArea, isDesktop && styles.mainAreaDesktop]}>
+                <View style={styles.mainColumn}>
+                  <Text style={styles.mainHeading}>Florida Fire Performance Objectives (POs)</Text>
+
+                  <TextInput
+                    style={styles.search}
+                    placeholder="Search objectives or page"
+                    placeholderTextColor="#8797ad"
+                    value={query}
+                    onChangeText={setQuery}
+                  />
+
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+                    <Pressable
+                      style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
+                      onPress={() => setSectionFilter("all")}
+                    >
+                      <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All</Text>
+                    </Pressable>
+                    {PERFORMANCE_SECTIONS.map((section) => (
+                      <Pressable
+                        key={section.id}
+                        style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
+                        onPress={() => setSectionFilter(section.id)}
+                      >
+                        <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+
+                  <Text style={styles.resultMeta}>
+                    {sections.length} sections • {totalObjectives} objectives
+                  </Text>
+
+                  {sections.map((section) => (
+                    <View key={section.id} style={styles.sectionCard}>
+                      <Text style={styles.sectionTitle}>{section.title}</Text>
+                      {section.data.map((objective) => (
+                        <View key={objective.id} style={styles.objectiveRow}>
+                          <Text style={styles.objectiveText}>{objective.title}</Text>
+                          <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
+                            <Text style={styles.pageLinkText}>p. {objective.page}</Text>
+                          </Pressable>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </PageBackground>
       </SafeAreaView>
     );
   }
@@ -237,134 +312,64 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
-      <ImageBackground source={BACKGROUND_IMAGE} style={styles.pageBackground} imageStyle={styles.pageBackgroundImage}>
-        <View style={styles.pageOverlay} />
+      <PageBackground>
         <View style={styles.appShell}>
           <ScrollView contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}>
             {renderTopBanner()}
 
-          <View style={styles.hero}>
-            <View style={styles.heroContent}>
-              <Text style={styles.heroKicker}>WELCOME TO</Text>
-              <Text style={styles.heroTitle}>MTC FIRE ACADEMY</Text>
-              <Text style={styles.heroSubtitle}>
-                Prepare for your Florida State Fire Exam and navigate your Performance Objectives quickly.
-              </Text>
-              <Pressable style={styles.getStartedButton} onPress={() => setSectionFilter("all")}>
-                <Text style={styles.getStartedText}>Performance Objectives (POs)</Text>
+            <View style={styles.hero}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroKicker}>WELCOME TO</Text>
+                <Text style={styles.heroTitle}>MTC FIRE ACADEMY</Text>
+                <Text style={styles.heroSubtitle}>
+                  Prepare for your Florida State Fire Exam and navigate your Performance Objectives quickly.
+                </Text>
+                <Pressable style={styles.getStartedButton} onPress={openPoPage}>
+                  <Text style={styles.getStartedText}>Performance Objectives (POs)</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
+              <Pressable style={[styles.quickCard, styles.quickCardYellow]} onPress={openPoPage}>
+                <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
+              </Pressable>
+              <Pressable style={[styles.quickCard, styles.quickCardBlue]} onPress={() => setCurrentPage("resources")}>
+                <Text style={styles.quickCardTitle}>Student Resources</Text>
               </Pressable>
             </View>
-          </View>
-
-          <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
-            <Pressable
-              style={[styles.quickCard, styles.quickCardYellow]}
-              onPress={() => {
-                setShowObjectives(true);
-                setSectionFilter("all");
-              }}
-            >
-              <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
-            </Pressable>
-            <Pressable style={[styles.quickCard, styles.quickCardBlue]} onPress={() => setCurrentPage("resources")}>
-              <Text style={styles.quickCardTitle}>Student Resources</Text>
-            </Pressable>
-          </View>
-
-          {showObjectives ? (
-            <View style={[styles.mainArea, isDesktop && styles.mainAreaDesktop]}>
-              <View style={styles.mainColumn}>
-                <Text style={styles.mainHeading}>Florida Fire Performance Objectives (POs)</Text>
-
-                <TextInput
-                  style={styles.search}
-                  placeholder="Search objectives or page"
-                  placeholderTextColor="#8797ad"
-                  value={query}
-                  onChangeText={setQuery}
-                />
-
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-                  <Pressable
-                    style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
-                    onPress={() => setSectionFilter("all")}
-                  >
-                    <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All</Text>
-                  </Pressable>
-                  {PERFORMANCE_SECTIONS.map((section) => (
-                    <Pressable
-                      key={section.id}
-                      style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
-                      onPress={() => setSectionFilter(section.id)}
-                    >
-                      <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-
-                <Text style={styles.resultMeta}>
-                  {sections.length} sections • {totalObjectives} objectives
-                </Text>
-
-                {sections.map((section) => (
-                  <View key={section.id} style={styles.sectionCard}>
-                    <Text style={styles.sectionTitle}>{section.title}</Text>
-                    {section.data.map((objective) => (
-                      <View key={objective.id} style={styles.objectiveRow}>
-                        <Text style={styles.objectiveText}>{objective.title}</Text>
-                        <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
-                          <Text style={styles.pageLinkText}>p. {objective.page}</Text>
-                        </Pressable>
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-
-              {isDesktop ? (
-                <View style={styles.sidebar}>
-                  <Text style={styles.sidebarTitle}>Recent Updates & Announcements</Text>
-                  <Text style={styles.sidebarItem}>New Practice Exam Packet</Text>
-                  <Text style={styles.sidebarDate}>April 15, 2024</Text>
-                  <Pressable
-                    style={styles.sidebarButton}
-                    onPress={() => {
-                      setShowObjectives(true);
-                      setSectionFilter("all");
-                    }}
-                  >
-                    <Text style={styles.sidebarButtonText}>View POs</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
           </ScrollView>
 
           {isMobile ? (
             <View style={styles.mobileTabBar}>
-              <Pressable onPress={() => setCurrentPage("home")}>
+              <Pressable onPress={goHome}>
                 <Text style={styles.mobileTab}>Home</Text>
+              </Pressable>
+              <Pressable onPress={openPoPage}>
+                <Text style={styles.mobileTab}>POs</Text>
               </Pressable>
               <Pressable onPress={() => setCurrentPage("resources")}>
                 <Text style={styles.mobileTab}>Student Resources</Text>
               </Pressable>
-              <Text style={styles.mobileTab}>Contact</Text>
             </View>
           ) : null}
         </View>
-      </ImageBackground>
+      </PageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#0d1320" },
-  pageBackground: { flex: 1 },
-  pageBackgroundImage: { resizeMode: "contain" },
+  pageRoot: { flex: 1, backgroundColor: "#0d1320" },
+  pageBgImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
   pageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 16, 30, 0.18)",
+    backgroundColor: "rgba(10, 16, 30, 0.14)",
   },
   appShell: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { paddingBottom: 26 },
@@ -390,7 +395,8 @@ const styles = StyleSheet.create({
   },
   loginButtonText: { color: "#fff", fontWeight: "800", fontSize: 14 },
   menuIcon: { color: "#fff", fontSize: 26, fontWeight: "700" },
-  hero: { minHeight: 290, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.22)" },
+
+  hero: { minHeight: 320, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.2)" },
   heroContent: { paddingHorizontal: 24, paddingVertical: 26, maxWidth: 620, gap: 8 },
   heroKicker: { color: "#eaf1ff", fontSize: 20, fontWeight: "700" },
   heroTitle: { color: "#ffffff", fontSize: 48, lineHeight: 52, fontWeight: "900" },
@@ -404,12 +410,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   getStartedText: { color: "#1a1a12", fontSize: 30, fontWeight: "800" },
+
   quickActions: {
     flexDirection: "row",
     gap: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "rgba(236, 238, 242, 0.6)",
+    backgroundColor: "rgba(236, 238, 242, 0.58)",
   },
   quickActionsMobile: { flexDirection: "column" },
   quickCard: {
@@ -421,10 +428,15 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.1)",
   },
   quickCardYellow: { backgroundColor: "#f3ca34" },
-  quickCardRed: { backgroundColor: "#cb3540" },
   quickCardBlue: { backgroundColor: "#253f66" },
   quickCardTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
-  mainArea: { paddingHorizontal: 16, paddingTop: 10, gap: 12, backgroundColor: "rgba(236, 238, 242, 0.62)" },
+
+  mainArea: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    gap: 12,
+    backgroundColor: "rgba(236, 238, 242, 0.62)",
+  },
   mainAreaDesktop: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   mainColumn: { flex: 1 },
   mainHeading: { fontSize: 30, fontWeight: "800", color: "#1c2430", marginBottom: 6 },
@@ -457,10 +469,6 @@ const styles = StyleSheet.create({
     borderColor: "#dde3ef",
     padding: 12,
     marginBottom: 10,
-    shadowColor: "#243247",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
   },
   sectionTitle: { color: "#1f2e44", fontSize: 19, fontWeight: "800", marginBottom: 8 },
   objectiveRow: {
@@ -480,26 +488,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   pageLinkText: { color: "#1c1e22", fontWeight: "800", fontSize: 12 },
-  sidebar: {
-    width: 280,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#dde3ef",
-    padding: 14,
-    gap: 10,
-  },
-  sidebarTitle: { color: "#1f2e44", fontSize: 20, fontWeight: "800" },
-  sidebarItem: { color: "#253852", fontSize: 16, fontWeight: "600" },
-  sidebarDate: { color: "#6f8098", fontSize: 14 },
-  sidebarButton: {
-    marginTop: 8,
-    backgroundColor: "#f4cc34",
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  sidebarButtonText: { color: "#1c1e22", fontWeight: "900" },
+
   mobileTabBar: {
     position: "absolute",
     left: 0,
@@ -513,6 +502,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   mobileTab: { color: "#eff4ff", fontSize: 13, fontWeight: "700" },
+
   resourcesContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 10, backgroundColor: "rgba(236, 238, 242, 0.62)" },
   resourcesTitle: { color: "#1c2430", fontSize: 32, fontWeight: "900" },
   resourcesSubtitle: { color: "#3d4f67", fontSize: 16, lineHeight: 22, marginBottom: 8 },
@@ -530,12 +520,9 @@ const styles = StyleSheet.create({
   resourceLabel: { color: "#1b2a3f", fontSize: 18, fontWeight: "800" },
   resourceNote: { color: "#586b86", fontSize: 14 },
   resourceArrow: { color: "#1d3f78", fontSize: 22, fontWeight: "800" },
+
   readerContainer: { flex: 1, padding: 12, backgroundColor: "rgba(9, 18, 28, 0.5)" },
   readerInfo: { marginBottom: 10, gap: 4 },
-  readerHeader: { marginBottom: 10, gap: 4 },
-  readerLogoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  readerLogo: { width: 38, height: 38, borderRadius: 19 },
-  readerBrand: { color: "#f2f6ff", fontWeight: "800", fontSize: 16 },
   readerTitle: { color: "#fff", fontWeight: "800", fontSize: 18 },
   readerSubtitle: { color: "#b7c6db", fontSize: 13 },
   readerFrameWrap: {
