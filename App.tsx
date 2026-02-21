@@ -33,6 +33,9 @@ type ResourceLink = {
 
 const PDF_PATH = "/fire-academy-pos.pdf";
 const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
+// Printed page numbers in the PO manual start after front matter.
+// This offset maps printed footer numbers to actual PDF page indices.
+const PRINTED_TO_PDF_OFFSET = 8;
 
 const RESOURCE_LINKS: ResourceLink[] = [
   {
@@ -63,7 +66,8 @@ function extractStartPage(pageValue: string): number {
 }
 
 function buildPdfUrl(startPage: number): string {
-  return `${PDF_PATH}#page=${startPage}&zoom=page-width`;
+  const mappedPage = Math.max(1, startPage + PRINTED_TO_PDF_OFFSET);
+  return `${PDF_PATH}#page=${mappedPage}&zoom=page-width`;
 }
 
 function PageBackground(props: { children: React.ReactNode }) {
