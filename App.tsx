@@ -39,22 +39,64 @@ const PRINTED_TO_PDF_OFFSET = 8;
 
 const RESOURCE_LINKS: ResourceLink[] = [
   {
-    id: "resource-1",
-    label: "Florida Fire College",
-    url: "https://www.myfloridacfo.com/division/sfm/bfst",
-    note: "State training and certification resources",
+    id: "rope-1",
+    label: "Overhand Knot",
+    url: "https://www.animatedknots.com/overhand-knot",
+    note: "Ropes & Knots",
   },
   {
-    id: "resource-2",
-    label: "Practice Exam Portal",
-    url: "https://example.com/practice-exams",
-    note: "Replace with your official exam prep link",
+    id: "rope-2",
+    label: "Figure 8 Knot",
+    url: "https://www.animatedknots.com/figure-8-knot",
+    note: "Ropes & Knots",
   },
   {
-    id: "resource-3",
-    label: "Student Forms & Downloads",
-    url: "https://example.com/student-forms",
-    note: "Replace with your document/forms link",
+    id: "rope-3",
+    label: "Half Hitch Knot",
+    url: "https://www.animatedknots.com/half-hitch-knot",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-4",
+    label: "Sheet Bend Knot",
+    url: "https://www.animatedknots.com/sheet-bend-knot",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-5",
+    label: "Figure 8 Bend Knot",
+    url: "https://www.animatedknots.com/figure-8-bend-knot",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-6",
+    label: "Water Knot",
+    url: "https://www.animatedknots.com/water-knot",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-7",
+    label: "Clove Hitch (Rope End)",
+    url: "https://www.animatedknots.com/clove-hitch-knot-rope-end",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-8",
+    label: "Clove Hitch (Half Hitches)",
+    url: "https://www.animatedknots.com/clove-hitch-knot-half-hitches",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-9",
+    label: "Bowline on a Bight",
+    url: "https://www.animatedknots.com/bowline-on-a-bight-knot",
+    note: "Ropes & Knots",
+  },
+  {
+    id: "rope-10",
+    label: "Bowline Knot",
+    url: "https://www.animatedknots.com/bowline-knot",
+    note: "Ropes & Knots",
   },
 ];
 
