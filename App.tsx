@@ -361,7 +361,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#0d1320" },
   pageBackground: { flex: 1 },
-  pageBackgroundImage: { resizeMode: "cover" },
+  pageBackgroundImage: { resizeMode: "contain" },
   pageOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(10, 16, 30, 0.18)",
