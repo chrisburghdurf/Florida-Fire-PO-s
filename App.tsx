@@ -154,21 +154,27 @@ function extractStartPage(pageValue: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-function buildPdfUrl(startPage: number): string {
+function resolvePdfTarget(startPage: number): { file: string; page: number } {
   const match = PO_SECTION_PAGE_MAP.find((entry) => startPage >= entry.start && startPage <= entry.end);
   if (match) {
     const localPage = startPage - match.start + 1;
-    return `${match.file}#page=${localPage}&zoom=page-width`;
+    return { file: match.file, page: localPage };
   }
-  return `${PDF_PATH}#page=${Math.max(1, startPage)}&zoom=page-width`;
+  return { file: PDF_PATH, page: Math.max(1, startPage) };
 }
 
-function withCacheBust(url: string): string {
-  const hashIndex = url.indexOf("#");
-  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
-  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
-  const sep = base.includes("?") ? "&" : "?";
-  return `${base}${sep}v=${Date.now()}${hash}`;
+function buildPdfUrl(startPage: number): string {
+  const target = resolvePdfTarget(startPage);
+  return `${target.file}#page=${target.page}&zoom=page-width`;
+}
+
+function buildMobilePdfViewerUrl(startPage: number): string {
+  const target = resolvePdfTarget(startPage);
+  const params = new URLSearchParams({
+    file: target.file,
+    page: String(target.page),
+  });
+  return `/pdf-viewer.html?${params.toString()}`;
 }
 
 function PageBackground(props: { children: React.ReactNode }) {
@@ -261,8 +267,8 @@ export default function App() {
   const totalObjectives = useMemo(() => sections.reduce((sum, section) => sum + section.data.length, 0), [sections]);
 
   const openObjective = (objective: PerformanceObjective) => {
-    const basePdfUrl = buildPdfUrl(extractStartPage(objective.page));
-    const pdfUrl = Platform.OS === "web" && isMobile ? withCacheBust(basePdfUrl) : basePdfUrl;
+    const startPage = extractStartPage(objective.page);
+    const pdfUrl = Platform.OS === "web" && isMobile ? buildMobilePdfViewerUrl(startPage) : buildPdfUrl(startPage);
     if (Platform.OS === "web") {
       setPoViewer({
         url: pdfUrl,
