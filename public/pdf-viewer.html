@@ -104,14 +104,21 @@
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
-            canvas.width = Math.floor(viewport.width);
-            canvas.height = Math.floor(viewport.height);
+            const outputScale = Math.max(1, window.devicePixelRatio || 1);
+            canvas.width = Math.floor(viewport.width * outputScale);
+            canvas.height = Math.floor(viewport.height * outputScale);
+            canvas.style.width = Math.floor(viewport.width) + "px";
+            canvas.style.height = Math.floor(viewport.height) + "px";
 
             wrap.appendChild(label);
             wrap.appendChild(canvas);
             pagesEl.appendChild(wrap);
 
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            await page.render({
+              canvasContext: context,
+              viewport: viewport,
+              transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0],
+            }).promise;
 
             if (pageNumber === targetPage) {
               targetNode = wrap;
