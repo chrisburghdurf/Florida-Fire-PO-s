@@ -38,9 +38,19 @@ type ResourceCategory = {
 
 const PDF_PATH = "/fire-academy-pos.pdf";
 const BACKGROUND_IMAGE = require("./assets/hero-bg.jpg");
-// Printed page numbers in the PO manual start after front matter.
-// This offset maps printed footer numbers to actual PDF page indices.
-const PRINTED_TO_PDF_OFFSET = 17;
+
+const PO_SECTION_PAGE_MAP: Array<{ start: number; end: number; file: string }> = [
+  { start: 1, end: 5, file: "/po-sections/01-INTRODUCTION.pdf" },
+  { start: 6, end: 15, file: "/po-sections/1-PPE.pdf" },
+  { start: 16, end: 34, file: "/po-sections/2-ROPES-KNOTS.pdf" },
+  { start: 35, end: 46, file: "/po-sections/3-GROUND-LADDERS.pdf" },
+  { start: 47, end: 78, file: "/po-sections/4-HOSE.pdf" },
+  { start: 79, end: 98, file: "/po-sections/5-FORCIBLE-ENTRY.pdf" },
+  { start: 99, end: 108, file: "/po-sections/6-VENTILATION.pdf" },
+  { start: 109, end: 120, file: "/po-sections/7-SALVAGE-OVERHAUL.pdf" },
+  { start: 121, end: 125, file: "/po-sections/8-MISCELLANEOUS.pdf" },
+  { start: 126, end: 134, file: "/po-sections/9-BIG-2.pdf" },
+];
 
 const RESOURCE_CATEGORIES: ResourceCategory[] = [
   {
@@ -143,8 +153,12 @@ function extractStartPage(pageValue: string): number {
 }
 
 function buildPdfUrl(startPage: number): string {
-  const mappedPage = Math.max(1, startPage + PRINTED_TO_PDF_OFFSET);
-  return `${PDF_PATH}#page=${mappedPage}&zoom=page-width`;
+  const match = PO_SECTION_PAGE_MAP.find((entry) => startPage >= entry.start && startPage <= entry.end);
+  if (match) {
+    const localPage = startPage - match.start + 1;
+    return `${match.file}#page=${localPage}&zoom=page-width`;
+  }
+  return `${PDF_PATH}#page=${Math.max(1, startPage)}&zoom=page-width`;
 }
 
 function PageBackground(props: { children: React.ReactNode }) {
