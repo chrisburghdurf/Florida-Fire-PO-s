@@ -80,12 +80,14 @@ export default function App() {
   const isDesktop = width >= 1200;
 
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
+  const [showObjectives, setShowObjectives] = useState(false);
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>("all");
   const [readerSelection, setReaderSelection] = useState<ReaderSelection | null>(null);
   const goHome = () => {
     setCurrentPage("home");
     setReaderSelection(null);
+    setShowObjectives(false);
   };
 
   const sections = useMemo<ObjectiveSection[]>(() => {
@@ -135,7 +137,15 @@ export default function App() {
           <Pressable onPress={goHome}>
             <Text style={styles.navLink}>Home</Text>
           </Pressable>
-          <Text style={styles.navLink}>POs</Text>
+          <Pressable
+            onPress={() => {
+              setCurrentPage("home");
+              setShowObjectives(true);
+              setSectionFilter("all");
+            }}
+          >
+            <Text style={styles.navLink}>POs</Text>
+          </Pressable>
           <Pressable onPress={() => setCurrentPage("resources")}>
             <Text style={styles.navLink}>Student Resources</Text>
           </Pressable>
@@ -247,7 +257,13 @@ export default function App() {
           </View>
 
           <View style={[styles.quickActions, isMobile && styles.quickActionsMobile]}>
-            <Pressable style={[styles.quickCard, styles.quickCardYellow]}>
+            <Pressable
+              style={[styles.quickCard, styles.quickCardYellow]}
+              onPress={() => {
+                setShowObjectives(true);
+                setSectionFilter("all");
+              }}
+            >
               <Text style={styles.quickCardTitle}>Performance Objectives (POs)</Text>
             </Pressable>
             <Pressable style={[styles.quickCard, styles.quickCardBlue]} onPress={() => setCurrentPage("resources")}>
@@ -255,66 +271,74 @@ export default function App() {
             </Pressable>
           </View>
 
-          <View style={[styles.mainArea, isDesktop && styles.mainAreaDesktop]}>
-            <View style={styles.mainColumn}>
-              <Text style={styles.mainHeading}>Florida Fire Performance Objectives (POs)</Text>
+          {showObjectives ? (
+            <View style={[styles.mainArea, isDesktop && styles.mainAreaDesktop]}>
+              <View style={styles.mainColumn}>
+                <Text style={styles.mainHeading}>Florida Fire Performance Objectives (POs)</Text>
 
-              <TextInput
-                style={styles.search}
-                placeholder="Search objectives or page"
-                placeholderTextColor="#8797ad"
-                value={query}
-                onChangeText={setQuery}
-              />
+                <TextInput
+                  style={styles.search}
+                  placeholder="Search objectives or page"
+                  placeholderTextColor="#8797ad"
+                  value={query}
+                  onChangeText={setQuery}
+                />
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-                <Pressable
-                  style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
-                  onPress={() => setSectionFilter("all")}
-                >
-                  <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All</Text>
-                </Pressable>
-                {PERFORMANCE_SECTIONS.map((section) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
                   <Pressable
-                    key={section.id}
-                    style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
-                    onPress={() => setSectionFilter(section.id)}
+                    style={[styles.chip, sectionFilter === "all" && styles.chipActive]}
+                    onPress={() => setSectionFilter("all")}
                   >
-                    <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
+                    <Text style={[styles.chipText, sectionFilter === "all" && styles.chipTextActive]}>All</Text>
                   </Pressable>
-                ))}
-              </ScrollView>
-
-              <Text style={styles.resultMeta}>
-                {sections.length} sections • {totalObjectives} objectives
-              </Text>
-
-              {sections.map((section) => (
-                <View key={section.id} style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
-                  {section.data.map((objective) => (
-                    <View key={objective.id} style={styles.objectiveRow}>
-                      <Text style={styles.objectiveText}>{objective.title}</Text>
-                      <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
-                        <Text style={styles.pageLinkText}>p. {objective.page}</Text>
-                      </Pressable>
-                    </View>
+                  {PERFORMANCE_SECTIONS.map((section) => (
+                    <Pressable
+                      key={section.id}
+                      style={[styles.chip, sectionFilter === section.id && styles.chipActive]}
+                      onPress={() => setSectionFilter(section.id)}
+                    >
+                      <Text style={[styles.chipText, sectionFilter === section.id && styles.chipTextActive]}>{section.title}</Text>
+                    </Pressable>
                   ))}
-                </View>
-              ))}
-            </View>
+                </ScrollView>
 
-            {isDesktop ? (
-              <View style={styles.sidebar}>
-                <Text style={styles.sidebarTitle}>Recent Updates & Announcements</Text>
-                <Text style={styles.sidebarItem}>New Practice Exam Packet</Text>
-                <Text style={styles.sidebarDate}>April 15, 2024</Text>
-                <Pressable style={styles.sidebarButton}>
-                  <Text style={styles.sidebarButtonText}>View POs</Text>
-                </Pressable>
+                <Text style={styles.resultMeta}>
+                  {sections.length} sections • {totalObjectives} objectives
+                </Text>
+
+                {sections.map((section) => (
+                  <View key={section.id} style={styles.sectionCard}>
+                    <Text style={styles.sectionTitle}>{section.title}</Text>
+                    {section.data.map((objective) => (
+                      <View key={objective.id} style={styles.objectiveRow}>
+                        <Text style={styles.objectiveText}>{objective.title}</Text>
+                        <Pressable style={styles.pageLink} onPress={() => openObjective(objective, section.title)}>
+                          <Text style={styles.pageLinkText}>p. {objective.page}</Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                ))}
               </View>
-            ) : null}
-          </View>
+
+              {isDesktop ? (
+                <View style={styles.sidebar}>
+                  <Text style={styles.sidebarTitle}>Recent Updates & Announcements</Text>
+                  <Text style={styles.sidebarItem}>New Practice Exam Packet</Text>
+                  <Text style={styles.sidebarDate}>April 15, 2024</Text>
+                  <Pressable
+                    style={styles.sidebarButton}
+                    onPress={() => {
+                      setShowObjectives(true);
+                      setSectionFilter("all");
+                    }}
+                  >
+                    <Text style={styles.sidebarButtonText}>View POs</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
           </ScrollView>
 
           {isMobile ? (
@@ -340,7 +364,7 @@ const styles = StyleSheet.create({
   pageBackgroundImage: { resizeMode: "cover" },
   pageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 16, 30, 0.45)",
+    backgroundColor: "rgba(10, 16, 30, 0.18)",
   },
   appShell: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { paddingBottom: 26 },
@@ -366,7 +390,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: { color: "#fff", fontWeight: "800", fontSize: 14 },
   menuIcon: { color: "#fff", fontSize: 26, fontWeight: "700" },
-  hero: { minHeight: 290, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.4)" },
+  hero: { minHeight: 290, justifyContent: "center", backgroundColor: "rgba(12, 22, 44, 0.22)" },
   heroContent: { paddingHorizontal: 24, paddingVertical: 26, maxWidth: 620, gap: 8 },
   heroKicker: { color: "#eaf1ff", fontSize: 20, fontWeight: "700" },
   heroTitle: { color: "#ffffff", fontSize: 48, lineHeight: 52, fontWeight: "900" },
@@ -385,7 +409,7 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "rgba(236, 238, 242, 0.78)",
+    backgroundColor: "rgba(236, 238, 242, 0.6)",
   },
   quickActionsMobile: { flexDirection: "column" },
   quickCard: {
