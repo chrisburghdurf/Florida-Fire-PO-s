@@ -3,8 +3,23 @@
     "name": "Fire Academy PO's",
     "slug": "fire-academy-pos",
     "version": "0.1.0",
+    "icon": "./assets/app-icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/app-icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#111f47"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "MTC Fire Academy",
+      "shortName": "MTC Fire"
+    },
     "assetBundlePatterns": [
       "**/*"
     ]
