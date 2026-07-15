@@ -43,16 +43,16 @@ const APPLE_TOUCH_ICON = "/apple-touch-icon.png";
 const WEB_MANIFEST = "/manifest.webmanifest";
 
 const PO_SECTION_PAGE_MAP: Array<{ start: number; end: number; file: string }> = [
-  { start: 1, end: 5, file: "/po-sections/01-INTRODUCTION.pdf" },
-  { start: 6, end: 15, file: "/po-sections/1-PPE.pdf" },
-  { start: 16, end: 34, file: "/po-sections/2-ROPES-KNOTS.pdf" },
-  { start: 35, end: 46, file: "/po-sections/3-GROUND-LADDERS.pdf" },
-  { start: 47, end: 78, file: "/po-sections/4-HOSE.pdf" },
-  { start: 79, end: 98, file: "/po-sections/5-FORCIBLE-ENTRY.pdf" },
-  { start: 99, end: 108, file: "/po-sections/6-VENTILATION.pdf" },
-  { start: 109, end: 120, file: "/po-sections/7-SALVAGE-OVERHAUL.pdf" },
-  { start: 121, end: 125, file: "/po-sections/8-MISCELLANEOUS.pdf" },
-  { start: 126, end: 134, file: "/po-sections/9-BIG-2.pdf" },
+  { start: 0, end: 4, file: "/po-sections/01-INTRODUCTION.pdf" },
+  { start: 5, end: 15, file: "/po-sections/1-PPE.pdf" },
+  { start: 15, end: 34, file: "/po-sections/2-ROPES-KNOTS.pdf" },
+  { start: 34, end: 46, file: "/po-sections/3-GROUND-LADDERS.pdf" },
+  { start: 46, end: 78, file: "/po-sections/4-HOSE.pdf" },
+  { start: 78, end: 97, file: "/po-sections/5-FORCIBLE-ENTRY.pdf" },
+  { start: 98, end: 107, file: "/po-sections/6-VENTILATION.pdf" },
+  { start: 108, end: 120, file: "/po-sections/7-SALVAGE-OVERHAUL.pdf" },
+  { start: 120, end: 124, file: "/po-sections/8-MISCELLANEOUS.pdf" },
+  { start: 125, end: 134, file: "/po-sections/9-BIG-2.pdf" },
 ];
 
 const RESOURCE_CATEGORIES: ResourceCategory[] = [
