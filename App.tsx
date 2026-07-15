@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { PERFORMANCE_SECTIONS, type PerformanceObjective } from "./src/data/performanceObjectives";
+import { BUILD_VERSION } from "./src/buildVersion";
 
 type SectionFilter = "all" | string;
 type AppPage = "home" | "resources" | "po";
@@ -228,6 +229,48 @@ export default function App() {
   const [expandedResourceSections, setExpandedResourceSections] = useState<Record<string, boolean>>({});
   const [poViewer, setPoViewer] = useState<{ url: string; title: string; page: string } | null>(null);
   const [resourceViewer, setResourceViewer] = useState<{ url: string; title: string; note: string } | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+
+    let cancelled = false;
+
+    const checkForUpdate = async () => {
+      try {
+        const response = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && data.version && data.version !== BUILD_VERSION) {
+          setUpdateAvailable(true);
+        }
+      } catch {
+        // offline or transient network error - try again on the next check
+      }
+    };
+
+    checkForUpdate();
+    const intervalId = setInterval(checkForUpdate, 5 * 60 * 1000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") checkForUpdate();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", checkForUpdate);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", checkForUpdate);
+    };
+  }, []);
+
+  const reloadApp = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
 
   const goHome = () => {
     setCurrentPage("home");
@@ -305,6 +348,12 @@ export default function App() {
     Linking.openURL(item.url);
   };
 
+  const updateBanner = updateAvailable ? (
+    <Pressable style={styles.updateBanner} onPress={reloadApp}>
+      <Text style={styles.updateBannerText}>Update available — tap to refresh</Text>
+    </Pressable>
+  ) : null;
+
   const renderTopBanner = () => (
     <View style={styles.navbar}>
       <Pressable style={styles.brandRow} onPress={goHome}>
@@ -334,6 +383,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
+        {updateBanner}
         <PageBackground>
           <View style={styles.appShell}>
             {renderTopBanner()}
@@ -405,6 +455,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" />
+        {updateBanner}
         <PageBackground>
           <View style={styles.appShell}>
             {renderTopBanner()}
@@ -565,6 +616,14 @@ const styles = StyleSheet.create({
   appShell: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { paddingBottom: 26 },
   scrollContentMobile: { paddingBottom: 84 },
+  updateBanner: {
+    backgroundColor: "#f3ca34",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  updateBannerText: { color: "#1c1e22", fontWeight: "800", fontSize: 14 },
   navbar: {
     backgroundColor: "#111f47",
     paddingHorizontal: 18,
